@@ -120,9 +120,57 @@ export function rerollAll(
   selectedSets: string[],
   mode: Mode,
   lang: Lang,
+  current?: RollResult | null,
 ): RollResult | null {
-  const r = roll(selectedSets, mode, lang);
-  return r.ok ? r.roll : null;
+  const fresh = roll(selectedSets, mode, lang);
+  if (!fresh.ok) return null;
+  if (!current) return fresh.roll;
+
+  // Preserve any locked fighters / map by carrying them over and re-picking
+  // the rest while excluding the locks.
+  const need = fighterCount(mode);
+  const fighterLocks = current.fighterLocks ?? [];
+  const lockedFighters: FighterPick[] = current.fighters
+    .map((f, i) => ({ f, locked: fighterLocks[i] === true }))
+    .filter((x) => x.locked)
+    .map((x) => x.f);
+
+  if (lockedFighters.length === 0 && !current.mapLock) {
+    return { ...fresh.roll, fighterLocks: [], mapLock: false };
+  }
+
+  const taken = new Set(lockedFighters.map((f) => `${f.setId}::${f.char}`));
+  const pool = fighterPool(selectedSets, lang).filter(
+    (f) => !taken.has(`${f.setId}::${f.char}`),
+  );
+  const remaining = need - lockedFighters.length;
+  if (remaining < 0) return null;
+  const picked = sample(pool, remaining);
+  if (picked.length < remaining) return null;
+
+  // Reassemble fighters preserving original positions
+  const newFighters: FighterPick[] = [];
+  let pickedIdx = 0;
+  const newLocks: boolean[] = [];
+  for (let i = 0; i < need; i++) {
+    if (fighterLocks[i]) {
+      newFighters.push(current.fighters[i]);
+      newLocks.push(true);
+    } else {
+      newFighters.push(picked[pickedIdx++]);
+      newLocks.push(false);
+    }
+  }
+
+  const newMap = current.mapLock ? current.map : fresh.roll.map;
+
+  return {
+    mode,
+    fighters: newFighters,
+    map: newMap,
+    fighterLocks: newLocks,
+    mapLock: current.mapLock ?? false,
+  };
 }
 
 export const ALL_SET_IDS = SETS.map((s) => s.id);

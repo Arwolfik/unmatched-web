@@ -3,11 +3,13 @@ import { Nav } from './components/Nav';
 import { SetsGrid } from './components/SetsGrid';
 import { ResultPanel } from './components/ResultPanel';
 import { StickyBar } from './components/StickyBar';
+import { HistorySheet } from './components/HistorySheet';
 import { ALL_SET_IDS, rerollAll, rerollFighter, rerollMap, roll } from './lib/roll';
 import type { RollError } from './lib/roll';
 import { t } from './lib/i18n';
-import { loadState, saveState } from './lib/storage';
-import type { Lang, Mode, RollResult, Theme } from './types';
+import { HISTORY_MAX, loadState, saveState } from './lib/storage';
+import { makeId } from './lib/time';
+import type { HistoryEntry, Lang, Mode, RollResult, Theme } from './types';
 
 const DEFAULT_PLAYER_NAMES: string[] = ['', '', '', ''];
 
@@ -37,7 +39,9 @@ export default function App() {
   const [selected, setSelected] = useState<string[]>(persisted.selectedSets ?? ALL_SET_IDS);
   const [mode, setMode] = useState<Mode>(persisted.mode ?? 'duo');
   const [playerNames, setPlayerNames] = useState<string[]>(persisted.playerNames ?? DEFAULT_PLAYER_NAMES);
-  const [result, setResult] = useState<RollResult | null>(null);
+  const [result, setResult] = useState<RollResult | null>(persisted.result ?? null);
+  const [history, setHistory] = useState<HistoryEntry[]>(persisted.history ?? []);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [error, setError] = useState<RollError | null>(null);
 
   // Persist anything that changes
@@ -46,6 +50,19 @@ export default function App() {
   useEffect(() => { saveState({ selectedSets: selected }); }, [selected]);
   useEffect(() => { saveState({ mode }); }, [mode]);
   useEffect(() => { saveState({ playerNames }); }, [playerNames]);
+  useEffect(() => { saveState({ result }); }, [result]);
+  useEffect(() => { saveState({ history }); }, [history]);
+
+  // Archive a roll into history (used before replacing current with a fresh roll).
+  const archiveRoll = (r: RollResult, names: string[]) => {
+    const entry: HistoryEntry = {
+      id: makeId(),
+      timestamp: Date.now(),
+      result: r,
+      playerNames: names.slice(),
+    };
+    setHistory((h) => [entry, ...h].slice(0, HISTORY_MAX));
+  };
 
   // Apply theme to <html>
   useEffect(() => {
@@ -78,6 +95,7 @@ export default function App() {
   const handleRoll = () => {
     const r = roll(selected, mode, lang);
     if (r.ok) {
+      if (result) archiveRoll(result, playerNames);
       setResult(r.roll);
       setError(null);
       // Scroll the result into view shortly after render
@@ -86,7 +104,6 @@ export default function App() {
         el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     } else {
-      setResult(null);
       setError(r.error);
     }
   };
@@ -100,8 +117,41 @@ export default function App() {
     setResult(rerollMap(result, selected, lang));
   };
   const handleRerollAll = () => {
-    const next = rerollAll(selected, mode, lang);
-    if (next) setResult(next);
+    const next = rerollAll(selected, mode, lang, result);
+    if (next) {
+      if (result) archiveRoll(result, playerNames);
+      setResult(next);
+    }
+  };
+
+  const handleToggleFighterLock = (idx: number) => {
+    setResult((r) => {
+      if (!r) return r;
+      const locks = (r.fighterLocks ?? r.fighters.map(() => false)).slice();
+      locks[idx] = !locks[idx];
+      return { ...r, fighterLocks: locks };
+    });
+  };
+
+  const handleToggleMapLock = () => {
+    setResult((r) => (r ? { ...r, mapLock: !r.mapLock } : r));
+  };
+
+  const handleHistoryRestore = (entry: HistoryEntry) => {
+    setResult(entry.result);
+    setMode(entry.result.mode);
+    setPlayerNames(entry.playerNames);
+    setHistoryOpen(false);
+    setError(null);
+    requestAnimationFrame(() => {
+      const el = document.querySelector('.result');
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const handleHistoryClear = () => {
+    setHistory([]);
+    setHistoryOpen(false);
   };
 
   const handlePlayerRename = (idx: number, name: string) => {
@@ -117,8 +167,19 @@ export default function App() {
       <Nav
         lang={lang}
         theme={theme}
+        historyCount={history.length}
         onLangChange={setLang}
         onThemeToggle={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+        onHistoryOpen={() => setHistoryOpen(true)}
+      />
+
+      <HistorySheet
+        open={historyOpen}
+        history={history}
+        lang={lang}
+        onClose={() => setHistoryOpen(false)}
+        onRestore={handleHistoryRestore}
+        onClear={handleHistoryClear}
       />
 
       <main>
@@ -146,6 +207,8 @@ export default function App() {
             onRerollFighter={handleRerollFighter}
             onRerollMap={handleRerollMap}
             onRerollAll={handleRerollAll}
+            onToggleFighterLock={handleToggleFighterLock}
+            onToggleMapLock={handleToggleMapLock}
           />
         ) : (
           !error && (

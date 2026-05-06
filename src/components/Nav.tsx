@@ -4,11 +4,13 @@ import { t } from '../lib/i18n';
 interface Props {
   lang: Lang;
   theme: Theme;
+  historyCount: number;
   onLangChange: (l: Lang) => void;
   onThemeToggle: () => void;
+  onHistoryOpen: () => void;
 }
 
-export function Nav({ lang, theme, onLangChange, onThemeToggle }: Props) {
+export function Nav({ lang, theme, historyCount, onLangChange, onThemeToggle, onHistoryOpen }: Props) {
   const s = t(lang);
 
   return (
@@ -20,6 +22,19 @@ export function Nav({ lang, theme, onLangChange, onThemeToggle }: Props) {
         </a>
 
         <div className="nav-controls">
+          <button
+            type="button"
+            className="icon-btn icon-btn-history"
+            onClick={onHistoryOpen}
+            aria-label={s.historyTitle}
+            title={s.historyTitle}
+          >
+            <HistoryIcon />
+            {historyCount > 0 && (
+              <span className="icon-btn-badge" aria-hidden="true">{historyCount}</span>
+            )}
+          </button>
+
           <div className="toggle-group" role="group" aria-label="Language">
             <button
               type="button"
@@ -47,6 +62,16 @@ export function Nav({ lang, theme, onLangChange, onThemeToggle }: Props) {
         </div>
       </div>
     </nav>
+  );
+}
+
+function HistoryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v5h5" />
+      <path d="M12 7v5l3 2" />
+    </svg>
   );
 }
 

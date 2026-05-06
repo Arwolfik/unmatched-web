@@ -1,6 +1,7 @@
-import type { Lang, Mode, Theme } from '../types';
+import type { HistoryEntry, Lang, Mode, RollResult, Theme } from '../types';
 
 const KEY = 'unmatched-picker:v1';
+export const HISTORY_MAX = 20;
 
 interface Persisted {
   lang?: Lang;
@@ -8,6 +9,8 @@ interface Persisted {
   selectedSets?: string[];
   mode?: Mode;
   playerNames?: string[];
+  result?: RollResult | null;
+  history?: HistoryEntry[];
 }
 
 export function loadState(): Persisted {

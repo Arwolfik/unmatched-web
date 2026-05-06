@@ -44,6 +44,23 @@ interface Strings {
   footerDisclaimer: string;
   footerSource: string;
   footerAuthor: string;
+  // locks
+  lock: string;
+  unlock: string;
+  // history
+  history: string;
+  historyTitle: string;
+  historyEmpty: string;
+  historyEmptySub: string;
+  historyClear: string;
+  historyClearConfirm: string;
+  historyClose: string;
+  historyRestore: string;
+  // relative time
+  justNow: string;
+  minAgo: (n: number) => string;
+  hourAgo: (n: number) => string;
+  dayAgo: (n: number) => string;
 }
 
 const en: Strings = {
@@ -84,6 +101,20 @@ const en: Strings = {
     'A fan project — not affiliated with or endorsed by Restoration Games. All set, fighter, and map names are property of their respective rights holders.',
   footerSource: 'Source',
   footerAuthor: 'by Artem Saprykin',
+  lock: 'Lock — keep on Reroll all',
+  unlock: 'Unlock',
+  history: 'History',
+  historyTitle: 'Roll history',
+  historyEmpty: 'No rolls yet.',
+  historyEmptySub: 'Past rolls will appear here as you play.',
+  historyClear: 'Clear history',
+  historyClearConfirm: 'Clear all history?',
+  historyClose: 'Close',
+  historyRestore: 'Restore',
+  justNow: 'just now',
+  minAgo: (n) => `${n}m ago`,
+  hourAgo: (n) => `${n}h ago`,
+  dayAgo: (n) => `${n}d ago`,
 };
 
 const ru: Strings = {
@@ -137,6 +168,20 @@ const ru: Strings = {
     'Фан-проект — не аффилирован с Restoration Games. Названия наборов, бойцов и карт принадлежат правообладателям.',
   footerSource: 'Исходники',
   footerAuthor: 'автор: Артём Сапрыкин',
+  lock: 'Закрепить — не менять при «Перебросить всё»',
+  unlock: 'Открепить',
+  history: 'История',
+  historyTitle: 'История бросков',
+  historyEmpty: 'Бросков ещё не было.',
+  historyEmptySub: 'Здесь появятся прошлые броски.',
+  historyClear: 'Очистить историю',
+  historyClearConfirm: 'Очистить всю историю?',
+  historyClose: 'Закрыть',
+  historyRestore: 'Восстановить',
+  justNow: 'только что',
+  minAgo: (n) => `${n} мин назад`,
+  hourAgo: (n) => `${n} ч назад`,
+  dayAgo: (n) => `${n} д назад`,
 };
 
 const TABLE: Record<Lang, Strings> = { en, ru };

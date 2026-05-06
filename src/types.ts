@@ -26,6 +26,10 @@ export interface RollResult {
   mode: Mode;
   fighters: FighterPick[];
   map: MapPick | null;
+  /** Indices of fighters that should be preserved on Reroll All. */
+  fighterLocks?: boolean[];
+  /** Whether the map should be preserved on Reroll All. */
+  mapLock?: boolean;
 }
 
 export interface AppState {
@@ -35,4 +39,11 @@ export interface AppState {
   mode: Mode;
   roll: RollResult | null;
   playerNames: string[]; // length 4 — overrides default labels in results
+}
+
+export interface HistoryEntry {
+  id: string;
+  timestamp: number;
+  result: RollResult;
+  playerNames: string[];
 }

@@ -11,6 +11,8 @@ interface Props {
   onRerollFighter: (idx: number) => void;
   onRerollMap: () => void;
   onRerollAll: () => void;
+  onToggleFighterLock: (idx: number) => void;
+  onToggleMapLock: () => void;
 }
 
 export function ResultPanel({
@@ -21,6 +23,8 @@ export function ResultPanel({
   onRerollFighter,
   onRerollMap,
   onRerollAll,
+  onToggleFighterLock,
+  onToggleMapLock,
 }: Props) {
   const s = t(lang);
   const announceRef = useRef<HTMLDivElement>(null);
@@ -51,15 +55,26 @@ export function ResultPanel({
       <div className={`fighters-row ${isFour ? 'cols-4' : ''}`}>
         {result.fighters.map((f, idx) => {
           const set = SET_BY_ID.get(f.setId);
+          const locked = result.fighterLocks?.[idx] === true;
           return (
             <article
               key={`${idx}-${f.setId}-${f.char}`}
-              className={`fighter-card stagger-${idx + 1}`}
+              className={`fighter-card stagger-${idx + 1}${locked ? ' locked' : ''}`}
             >
               <div className="card-corners" aria-hidden="true">
                 <span /><span /><span /><span />
               </div>
               {set && <div className="card-stamp">{set.code}</div>}
+              <button
+                type="button"
+                className="card-lock"
+                aria-pressed={locked}
+                aria-label={locked ? s.unlock : s.lock}
+                title={locked ? s.unlock : s.lock}
+                onClick={() => onToggleFighterLock(idx)}
+              >
+                {locked ? <LockClosedIcon /> : <LockOpenIcon />}
+              </button>
               <span
                 className="player-label"
                 contentEditable
@@ -88,12 +103,23 @@ export function ResultPanel({
 
       {result.map && (() => {
         const set = SET_BY_ID.get(result.map.setId);
+        const locked = result.mapLock === true;
         return (
-          <article className="map-card">
+          <article className={`map-card${locked ? ' locked' : ''}`}>
             <div className="card-corners" aria-hidden="true">
               <span /><span /><span /><span />
             </div>
             {set && <div className="card-stamp">{set.code}</div>}
+            <button
+              type="button"
+              className="card-lock"
+              aria-pressed={locked}
+              aria-label={locked ? s.unlock : s.lock}
+              title={locked ? s.unlock : s.lock}
+              onClick={onToggleMapLock}
+            >
+              {locked ? <LockClosedIcon /> : <LockOpenIcon />}
+            </button>
             <div className="map-label">{s.mapLabel}</div>
             <h3 className="map-name">{result.map.name}</h3>
             <div className="card-sep" aria-hidden="true" />
@@ -136,5 +162,23 @@ export function ResultPanel({
         </button>
       </div>
     </section>
+  );
+}
+
+function LockClosedIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+  );
+}
+
+function LockOpenIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0" />
+    </svg>
   );
 }
