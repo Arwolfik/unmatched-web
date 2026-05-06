@@ -10,11 +10,12 @@ interface Props {
   onToggle: (id: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
-  onOpenDetail: (id: string) => void;
+  onToggleFighter: (key: string) => void;
 }
 
 export function SetsGrid({
-  lang, selected, excludedFighters, onToggle, onSelectAll, onDeselectAll, onOpenDetail,
+  lang, selected, excludedFighters,
+  onToggle, onSelectAll, onDeselectAll, onToggleFighter,
 }: Props) {
   const s = t(lang);
   const [query, setQuery] = useState('');
@@ -33,9 +34,9 @@ export function SetsGrid({
 
   return (
     <section className="sets-section" aria-label={s.yourSets}>
-      <header className="section-head">
+      <header className="sets-toolbar">
         <span className="section-count">{s.setsCount(selected.length, SETS.length)}</span>
-        <div className="section-controls">
+        <div className="sets-toolbar-actions">
           <button type="button" className="btn-tertiary" onClick={onSelectAll}>{s.selectAll}</button>
           <button type="button" className="btn-tertiary" onClick={onDeselectAll}>{s.deselectAll}</button>
         </div>
@@ -57,28 +58,20 @@ export function SetsGrid({
         />
       </div>
 
-      <div style={{ height: 16 }} />
-
-      <div className="sets-grid">
+      <ul className="sets-list">
         {filtered.map((set) => {
           const isOwned = selected.includes(set.id);
-          const totalChars = set.characters[lang].length;
+          const chars = set.characters[lang];
           const includedChars = isOwned
-            ? totalChars - set.characters[lang].filter((_, i) => excluded.has(`${set.id}::${i}`)).length
+            ? chars.length - chars.filter((_, i) => excluded.has(`${set.id}::${i}`)).length
             : 0;
           return (
-            <div
-              key={set.id}
-              className="set-card"
-              aria-checked={isOwned}
-              role="group"
-            >
+            <li key={set.id} className={`set-row${isOwned ? ' owned' : ''}`}>
               <button
                 type="button"
-                className="set-check-btn"
                 role="checkbox"
                 aria-checked={isOwned}
-                aria-label={`${isOwned ? s.deselectAll : s.selectAll}: ${set.name[lang]}`}
+                className="set-row-main"
                 onClick={() => onToggle(set.id)}
               >
                 <span className="set-check" aria-hidden="true">
@@ -86,26 +79,42 @@ export function SetsGrid({
                     <path d="M5 12l5 5L20 7" />
                   </svg>
                 </span>
+                <span className="set-row-code">{set.code}</span>
+                <span className="set-row-name">{set.name[lang]}</span>
+                <span className="set-row-count">
+                  {isOwned ? `${includedChars}/${chars.length}` : `${chars.length}`}
+                </span>
               </button>
-              <button
-                type="button"
-                className="set-card-main"
-                onClick={() => onOpenDetail(set.id)}
-                aria-label={`${set.name[lang]} — ${s.customizeSets}`}
-              >
-                <div className="set-code">{set.code}</div>
-                <div className="set-name">{set.name[lang]}</div>
-                <div className="set-meta">
-                  {isOwned
-                    ? s.fightersIncluded(includedChars, totalChars)
-                    : s.fightersCount(totalChars)
-                  }
+
+              {isOwned && (
+                <div className="char-chips" role="group" aria-label={s.fightersHeader}>
+                  {chars.map((char, idx) => {
+                    const key = `${set.id}::${idx}`;
+                    const on = !excluded.has(key);
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        role="checkbox"
+                        aria-checked={on}
+                        className={`char-chip${on ? ' on' : ''}`}
+                        onClick={() => onToggleFighter(key)}
+                      >
+                        <span className="set-check" aria-hidden="true">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M5 12l5 5L20 7" />
+                          </svg>
+                        </span>
+                        <span>{char}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-              </button>
-            </div>
+              )}
+            </li>
           );
         })}
-      </div>
+      </ul>
     </section>
   );
 }

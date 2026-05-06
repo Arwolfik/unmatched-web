@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Nav } from './components/Nav';
 import { SetsSheet } from './components/SetsSheet';
-import { SetDetailSheet } from './components/SetDetailSheet';
 import { ResultPanel } from './components/ResultPanel';
 import { StickyBar } from './components/StickyBar';
 import { HistorySheet } from './components/HistorySheet';
@@ -47,7 +46,6 @@ export default function App() {
   const [history, setHistory] = useState<HistoryEntry[]>(persisted.history ?? []);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [setsOpen, setSetsOpen] = useState(false);
-  const [detailSetId, setDetailSetId] = useState<string | null>(null);
   const [error, setError] = useState<RollError | null>(null);
 
   // Persist anything that changes
@@ -247,16 +245,6 @@ export default function App() {
         onToggle={handleToggleSet}
         onSelectAll={handleSelectAll}
         onDeselectAll={handleDeselectAll}
-        onOpenDetail={(id) => setDetailSetId(id)}
-      />
-
-      <SetDetailSheet
-        setId={detailSetId}
-        lang={lang}
-        isOwned={detailSetId ? selected.includes(detailSetId) : false}
-        excludedFighters={excludedFighters}
-        onClose={() => setDetailSetId(null)}
-        onToggleSet={() => detailSetId && handleToggleSet(detailSetId)}
         onToggleFighter={handleToggleExcludedFighter}
       />
 

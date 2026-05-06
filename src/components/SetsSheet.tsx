@@ -12,11 +12,11 @@ interface Props {
   onToggle: (id: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
-  onOpenDetail: (id: string) => void;
+  onToggleFighter: (key: string) => void;
 }
 
 export function SetsSheet({
-  open, lang, selected, excludedFighters, onClose, onToggle, onSelectAll, onDeselectAll, onOpenDetail,
+  open, lang, selected, excludedFighters, onClose, onToggle, onSelectAll, onDeselectAll, onToggleFighter,
 }: Props) {
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -68,7 +68,7 @@ export function SetsSheet({
             onToggle={onToggle}
             onSelectAll={onSelectAll}
             onDeselectAll={onDeselectAll}
-            onOpenDetail={onOpenDetail}
+            onToggleFighter={onToggleFighter}
           />
         </div>
       </div>
