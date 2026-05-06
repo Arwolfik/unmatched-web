@@ -29,6 +29,8 @@ interface Strings {
   // empty / errors
   emptyTitle: string;
   emptySub: string;
+  readyTitle: string;
+  readySub: string;
   errNoSets: string;
   errNoMaps: string;
   errNoQuadMaps: string;
@@ -38,6 +40,10 @@ interface Strings {
   // nav
   themeLight: string;
   themeDark: string;
+  // footer
+  footerDisclaimer: string;
+  footerSource: string;
+  footerAuthor: string;
 }
 
 const en: Strings = {
@@ -64,6 +70,8 @@ const en: Strings = {
   playerN: (n) => `Player ${n}`,
   emptyTitle: 'Pick your sets first.',
   emptySub: 'Toggle the boxes you own above, then roll.',
+  readyTitle: 'Ready to deal.',
+  readySub: 'Pick a mode below and tap Roll.',
   errNoSets: 'No sets selected. Pick at least one to roll.',
   errNoMaps: 'None of your selected sets include any maps. Add a set with a map.',
   errNoQuadMaps: 'None of your selected sets include a 4-player map. Add a bigger box (Battle of Legends, Cobble & Fog, Marvel, etc.).',
@@ -72,6 +80,10 @@ const en: Strings = {
     `Roll complete: ${fighters.join(', ')}${map ? ` on ${map}` : ''}.`,
   themeLight: 'Light theme',
   themeDark: 'Dark theme',
+  footerDisclaimer:
+    'A fan project — not affiliated with or endorsed by Restoration Games. All set, fighter, and map names are property of their respective rights holders.',
+  footerSource: 'Source',
+  footerAuthor: 'by Artem Saprykin',
 };
 
 const ru: Strings = {
@@ -111,6 +123,8 @@ const ru: Strings = {
   playerN: (n) => `Игрок ${n}`,
   emptyTitle: 'Сначала выберите наборы.',
   emptySub: 'Отметьте свои коробки выше — и бросайте.',
+  readyTitle: 'Готово к раздаче.',
+  readySub: 'Выбери режим ниже и нажми «Бросить».',
   errNoSets: 'Не выбрано ни одного набора. Отметьте хотя бы один.',
   errNoMaps: 'В выбранных наборах нет полей. Добавьте набор с полем.',
   errNoQuadMaps: 'Ни в одном из выбранных наборов нет полей для 4 игроков. Добавьте крупный набор (Битва легенд, Булыжники и туман, Marvel и т.д.).',
@@ -119,6 +133,10 @@ const ru: Strings = {
     `Бросок: ${fighters.join(', ')}${map ? ` на ${map}` : ''}.`,
   themeLight: 'Светлая тема',
   themeDark: 'Тёмная тема',
+  footerDisclaimer:
+    'Фан-проект — не аффилирован с Restoration Games. Названия наборов, бойцов и карт принадлежат правообладателям.',
+  footerSource: 'Исходники',
+  footerAuthor: 'автор: Артём Сапрыкин',
 };
 
 const TABLE: Record<Lang, Strings> = { en, ru };

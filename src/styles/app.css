@@ -375,9 +375,9 @@ main {
 
 .fighter-card {
   background: var(--surface);
-  padding: 28px 24px;
+  padding: 30px 24px 22px;
   position: relative;
-  min-height: 200px;
+  min-height: 220px;
   display: flex; flex-direction: column;
   animation: fade-in var(--t-base) var(--ease) backwards;
 }
@@ -395,16 +395,28 @@ main {
   margin-bottom: 14px;
   display: inline-flex; align-items: center; gap: 4px;
   cursor: text;
-  border-bottom: 1px dashed transparent;
-  padding-bottom: 1px;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 2px;
   transition: border-color var(--t-fast), color var(--t-fast);
+  /* Editable affordance — subtle pencil hint */
+  position: relative;
 }
-.player-label:hover { border-bottom-color: var(--border-strong); }
+.player-label::after {
+  content: '✎';
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 400;
+  margin-left: 4px;
+  opacity: 0.5;
+  display: inline;
+}
+.player-label:hover { border-bottom-color: var(--border-strong); color: var(--text-2); }
 .player-label[contenteditable='true']:focus {
   outline: none;
   border-bottom-color: var(--accent);
   color: var(--text);
 }
+.player-label[contenteditable='true']:focus::after { display: none; }
 
 .fighter-name {
   font-family: var(--font-display);
@@ -417,18 +429,54 @@ main {
   word-break: break-word;
 }
 .fighter-set {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: auto;
+}
+.card-sep {
+  width: 24px; height: 1px;
+  background: var(--border-strong);
+  margin-top: auto;
+  margin-bottom: 8px;
+}
+
+/* Card-as-object decorations */
+.card-stamp {
+  position: absolute;
+  top: 14px; right: 16px;
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--text-3);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin-top: auto;
-  display: flex; align-items: center; gap: 6px;
-}
-.fighter-set-code {
-  color: var(--accent);
   font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  padding: 3px 7px 2px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  z-index: 1;
 }
+[data-theme='dark'] .card-stamp {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Tiny corner ticks — subtle "physical card" affordance */
+.card-corners {
+  position: absolute; inset: 0;
+  pointer-events: none;
+}
+.card-corners > span {
+  position: absolute;
+  width: 7px; height: 7px;
+  border: 1px solid var(--border-strong);
+  opacity: 0.7;
+}
+.card-corners > span:nth-child(1) { top: 5px;    left: 5px;    border-right: 0; border-bottom: 0; }
+.card-corners > span:nth-child(2) { top: 5px;    right: 5px;   border-left:  0; border-bottom: 0; }
+.card-corners > span:nth-child(3) { bottom: 5px; left: 5px;    border-right: 0; border-top:    0; }
+.card-corners > span:nth-child(4) { bottom: 5px; right: 5px;   border-left:  0; border-top:    0; }
 
 /* Map card */
 .map-card {
@@ -459,14 +507,14 @@ main {
   margin-bottom: 8px;
 }
 .map-set {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-3);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-2);
 }
-.map-set-code { color: var(--accent); font-weight: 600; }
+.map-card { position: relative; padding: 26px 24px 20px; }
+.map-card .card-sep { margin-top: 8px; }
 
 /* Reroll bar */
 .reroll-bar {
@@ -606,6 +654,43 @@ main {
 .btn-primary .die { font-size: 16px; }
 
 /* ============================================================
+   FOOTER
+   ============================================================ */
+
+.footer {
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+  padding: 24px;
+}
+.footer-inner {
+  max-width: var(--container);
+  margin: 0 auto;
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.footer-disclaimer {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.6;
+  max-width: 720px;
+}
+.footer-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  display: flex; align-items: center; gap: 10px;
+  white-space: nowrap;
+}
+.footer-meta a {
+  color: var(--text-2);
+  text-decoration: none;
+  transition: color var(--t-fast);
+}
+.footer-meta a:hover { color: var(--accent); }
+.footer-dot { opacity: 0.5; }
+
+/* ============================================================
    ANIMATIONS
    ============================================================ */
 
@@ -633,16 +718,52 @@ main {
   .fighters-row.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 600px) {
-  main { padding: 24px 16px calc(var(--sticky-h) + 24px); }
+  :root { --sticky-h: 64px; }
+  main { padding: 20px 16px calc(var(--sticky-h) + 24px); }
   .nav { padding: 0 16px; }
-  .sticky-bar { padding: 0 16px; padding-bottom: env(safe-area-inset-bottom); }
+  .nav-logo span:not(.nav-logo-mark) { font-size: 16px; }
+  .sticky-bar {
+    padding: 0 12px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .sticky-inner { gap: 8px; }
   .sets-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .set-card { min-height: 110px; padding: 14px 14px 12px; }
+  .set-name { font-size: 14px; }
+
   .fighters-row, .fighters-row.cols-4 { grid-template-columns: minmax(0, 1fr); }
-  .fighter-card { padding: 20px 18px; min-height: 0; }
+  .fighter-card { padding: 22px 18px; min-height: 0; }
   .map-card { padding: 18px; }
-  .mode-tab { padding: 6px 10px; font-size: 12px; }
+
+  /* Compact pills, but keep 44px touch target via padding-top/bottom */
+  .mode-tabs { gap: 4px; }
+  .mode-tab {
+    padding: 10px 12px;
+    font-size: 13px;
+    border-radius: var(--radius-pill);
+  }
   .mode-tab .mono { display: none; }
-  .btn-primary { padding: 10px 20px; font-size: 14px; }
-  .section-title { font-size: 20px; }
-  .reroll-btn { font-size: 12px; padding: 12px 8px; gap: 4px; }
+  .btn-primary { padding: 11px 18px; font-size: 14px; }
+  .btn-primary .die { font-size: 15px; }
+
+  .section-title { font-size: 19px; }
+  .section-head { gap: 8px 12px; row-gap: 6px; }
+  .section-controls { gap: 12px; }
+
+  /* Reroll bar — wrap into a 2-up grid so labels stay readable */
+  .reroll-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .reroll-btn {
+    font-size: 13px; padding: 12px 8px; gap: 6px;
+    min-height: 44px;
+  }
+
+  .empty { padding: 48px 20px; }
+  .empty-text { font-size: 19px; }
+}
+
+@media (max-width: 380px) {
+  .mode-tab { padding: 9px 8px; font-size: 12px; }
+  .nav-logo span:not(.nav-logo-mark) { font-size: 15px; }
 }

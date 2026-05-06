@@ -150,12 +150,31 @@ export default function App() {
         ) : (
           !error && (
             <div className="empty">
-              <div className="empty-text">{s.emptyTitle}</div>
-              <div className="empty-sub">{s.emptySub}</div>
+              <div className="empty-text">
+                {selected.length === 0 ? s.emptyTitle : s.readyTitle}
+              </div>
+              <div className="empty-sub">
+                {selected.length === 0 ? s.emptySub : s.readySub}
+              </div>
             </div>
           )
         )}
       </main>
+
+      <footer className="footer">
+        <div className="footer-inner">
+          <p className="footer-disclaimer">{s.footerDisclaimer}</p>
+          <p className="footer-meta">
+            <a href="https://github.com/Arwolfik/unmatched-web" target="_blank" rel="noopener">
+              {s.footerSource}
+            </a>
+            <span className="footer-dot" aria-hidden="true">·</span>
+            <a href="https://saprykin.tech" target="_blank" rel="noopener">
+              {s.footerAuthor}
+            </a>
+          </p>
+        </div>
+      </footer>
 
       <StickyBar
         lang={lang}

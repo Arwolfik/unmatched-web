@@ -56,6 +56,10 @@ export function ResultPanel({
               key={`${idx}-${f.setId}-${f.char}`}
               className={`fighter-card stagger-${idx + 1}`}
             >
+              <div className="card-corners" aria-hidden="true">
+                <span /><span /><span /><span />
+              </div>
+              {set && <div className="card-stamp">{set.code}</div>}
               <span
                 className="player-label"
                 contentEditable
@@ -75,35 +79,28 @@ export function ResultPanel({
                 {playerNames[idx]?.trim() || s.playerN(idx + 1)}
               </span>
               <h3 className="fighter-name">{f.char}</h3>
-              <div className="fighter-set">
-                {set && <span className="fighter-set-code">{set.code}</span>}
-                {set && <span>·</span>}
-                {set && <span>{set.name[lang]}</span>}
-              </div>
+              <div className="card-sep" aria-hidden="true" />
+              {set && <div className="fighter-set">{set.name[lang]}</div>}
             </article>
           );
         })}
       </div>
 
-      {result.map && (
-        <article className="map-card">
-          <div className="map-label">{s.mapLabel}</div>
-          <h3 className="map-name">{result.map.name}</h3>
-          <div className="map-set">
-            {(() => {
-              const set = SET_BY_ID.get(result.map.setId);
-              if (!set) return null;
-              return (
-                <>
-                  <span className="map-set-code">{set.code}</span>
-                  <span>·</span>
-                  <span>{set.name[lang]}</span>
-                </>
-              );
-            })()}
-          </div>
-        </article>
-      )}
+      {result.map && (() => {
+        const set = SET_BY_ID.get(result.map.setId);
+        return (
+          <article className="map-card">
+            <div className="card-corners" aria-hidden="true">
+              <span /><span /><span /><span />
+            </div>
+            {set && <div className="card-stamp">{set.code}</div>}
+            <div className="map-label">{s.mapLabel}</div>
+            <h3 className="map-name">{result.map.name}</h3>
+            <div className="card-sep" aria-hidden="true" />
+            {set && <div className="map-set">{set.name[lang]}</div>}
+          </article>
+        );
+      })()}
 
       <div className="reroll-bar" role="group" aria-label={s.rerollAll}>
         {result.fighters.map((_, idx) => (
