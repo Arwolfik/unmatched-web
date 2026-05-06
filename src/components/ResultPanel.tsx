@@ -37,7 +37,6 @@ export function ResultPanel({
       await navigator.clipboard.writeText(url);
       setShareLabel(s.shareCopied);
     } catch {
-      // Fallback — old browsers / non-secure contexts
       try {
         const ta = document.createElement('textarea');
         ta.value = url;
@@ -64,7 +63,96 @@ export function ResultPanel({
     }
   }, [result, s]);
 
+  // Quad: 2 teams of 2 (player label = team label, fighters share an owner).
+  // Duo & FFA: each fighter has its own player label.
+  const isQuad = result.mode === 'quad';
   const isFour = result.fighters.length === 4;
+
+  const renderFighterCard = (idx: number, opts: { showLabel: boolean; teamIdx?: number }) => {
+    const f = result.fighters[idx];
+    const set = SET_BY_ID.get(f.setId);
+    const locked = result.fighterLocks?.[idx] === true;
+    const labelOwnerIdx = opts.teamIdx ?? idx;
+    const playerLabel = playerNames[labelOwnerIdx]?.trim() || s.playerN(labelOwnerIdx + 1);
+
+    return (
+      <article
+        key={`${idx}-${f.setId}-${f.char}`}
+        className={`fighter-card stagger-${idx + 1}${locked ? ' locked' : ''}`}
+      >
+        <div className="card-corners" aria-hidden="true">
+          <span /><span /><span /><span />
+        </div>
+        {set && <div className="card-stamp">{set.code}</div>}
+        <button
+          type="button"
+          className="card-lock"
+          aria-pressed={locked}
+          aria-label={locked ? s.unlock : s.lock}
+          title={locked ? s.unlock : s.lock}
+          onClick={() => onToggleFighterLock(idx)}
+        >
+          {locked ? <LockClosedIcon /> : <LockOpenIcon />}
+        </button>
+
+        {opts.showLabel && (
+          <span
+            className="player-label"
+            contentEditable
+            suppressContentEditableWarning
+            spellCheck={false}
+            onBlur={(e) => {
+              const value = e.currentTarget.textContent?.trim() ?? '';
+              onPlayerRename(labelOwnerIdx, value || s.playerN(labelOwnerIdx + 1));
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                (e.currentTarget as HTMLElement).blur();
+              }
+            }}
+          >
+            {playerLabel}
+          </span>
+        )}
+
+        <h3 className="fighter-name">{f.char}</h3>
+        <div className="card-sep" aria-hidden="true" />
+        {set && <div className="fighter-set">{set.name[lang]}</div>}
+      </article>
+    );
+  };
+
+  const renderTeam = (teamIdx: number, fighterIndices: number[]) => {
+    const teamLabel = playerNames[teamIdx]?.trim() || s.playerN(teamIdx + 1);
+    return (
+      <div className={`team team-${teamIdx + 1}`} key={`team-${teamIdx}`}>
+        <div className="team-head">
+          <span
+            className="team-label"
+            contentEditable
+            suppressContentEditableWarning
+            spellCheck={false}
+            onBlur={(e) => {
+              const value = e.currentTarget.textContent?.trim() ?? '';
+              onPlayerRename(teamIdx, value || s.playerN(teamIdx + 1));
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                (e.currentTarget as HTMLElement).blur();
+              }
+            }}
+          >
+            {teamLabel}
+          </span>
+        </div>
+        <div className="team-cards">
+          {fighterIndices.map((idx) => renderFighterCard(idx, { showLabel: false, teamIdx }))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <section className="result" aria-labelledby="result-title">
@@ -88,54 +176,16 @@ export function ResultPanel({
         <span className="result-head-rule" />
       </div>
 
-      <div className={`fighters-row ${isFour ? 'cols-4' : ''}`}>
-        {result.fighters.map((f, idx) => {
-          const set = SET_BY_ID.get(f.setId);
-          const locked = result.fighterLocks?.[idx] === true;
-          return (
-            <article
-              key={`${idx}-${f.setId}-${f.char}`}
-              className={`fighter-card stagger-${idx + 1}${locked ? ' locked' : ''}`}
-            >
-              <div className="card-corners" aria-hidden="true">
-                <span /><span /><span /><span />
-              </div>
-              {set && <div className="card-stamp">{set.code}</div>}
-              <button
-                type="button"
-                className="card-lock"
-                aria-pressed={locked}
-                aria-label={locked ? s.unlock : s.lock}
-                title={locked ? s.unlock : s.lock}
-                onClick={() => onToggleFighterLock(idx)}
-              >
-                {locked ? <LockClosedIcon /> : <LockOpenIcon />}
-              </button>
-              <span
-                className="player-label"
-                contentEditable
-                suppressContentEditableWarning
-                spellCheck={false}
-                onBlur={(e) => {
-                  const value = e.currentTarget.textContent?.trim() ?? '';
-                  onPlayerRename(idx, value || s.playerN(idx + 1));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    (e.currentTarget as HTMLElement).blur();
-                  }
-                }}
-              >
-                {playerNames[idx]?.trim() || s.playerN(idx + 1)}
-              </span>
-              <h3 className="fighter-name">{f.char}</h3>
-              <div className="card-sep" aria-hidden="true" />
-              {set && <div className="fighter-set">{set.name[lang]}</div>}
-            </article>
-          );
-        })}
-      </div>
+      {isQuad ? (
+        <div className="teams-row">
+          {renderTeam(0, [0, 1])}
+          {renderTeam(1, [2, 3])}
+        </div>
+      ) : (
+        <div className={`fighters-row ${isFour ? 'cols-4' : ''}`}>
+          {result.fighters.map((_, idx) => renderFighterCard(idx, { showLabel: true }))}
+        </div>
+      )}
 
       {result.map && (
         <article
@@ -146,7 +196,7 @@ export function ResultPanel({
             <span /><span /><span /><span />
           </div>
           {(() => {
-            const set = SET_BY_ID.get(result.map.setId);
+            const set = SET_BY_ID.get(result.map!.setId);
             const locked = result.mapLock === true;
             return (
               <>
@@ -172,18 +222,27 @@ export function ResultPanel({
       )}
 
       <div className="reroll-bar" role="group" aria-label={s.rerollAll}>
-        {result.fighters.map((_, idx) => (
-          <button
-            key={`rr-${idx}`}
-            type="button"
-            className="reroll-btn"
-            onClick={() => onRerollFighter(idx)}
-            title={s.rerollFighter}
-          >
-            <span className="die" aria-hidden="true">🎲</span>
-            <span>{playerNames[idx]?.trim() || s.playerN(idx + 1)}</span>
-          </button>
-        ))}
+        {result.fighters.map((_, idx) => {
+          // In quad mode, show fighter character name on reroll button (since each is unique).
+          // In duo/ffa, show player name.
+          const f = result.fighters[idx];
+          const labelOwnerIdx = isQuad ? (idx < 2 ? 0 : 1) : idx;
+          const buttonLabel = isQuad
+            ? f.char
+            : (playerNames[labelOwnerIdx]?.trim() || s.playerN(labelOwnerIdx + 1));
+          return (
+            <button
+              key={`rr-${idx}`}
+              type="button"
+              className="reroll-btn"
+              onClick={() => onRerollFighter(idx)}
+              title={s.rerollFighter}
+            >
+              <span className="die" aria-hidden="true">🎲</span>
+              <span>{buttonLabel}</span>
+            </button>
+          );
+        })}
         {result.map && (
           <button
             type="button"

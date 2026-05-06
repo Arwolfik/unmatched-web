@@ -2,12 +2,20 @@ import { SETS, SET_BY_ID } from '../data/sets';
 import type { FighterPick, Lang, MapPick, Mode, RollResult } from '../types';
 
 /** All fighters from the given set IDs as { char, setId } pairs. */
-export function fighterPool(selectedSets: string[], lang: Lang): FighterPick[] {
+export function fighterPool(
+  selectedSets: string[],
+  lang: Lang,
+  excludedFighters: string[] = [],
+): FighterPick[] {
+  const excluded = new Set(excludedFighters);
   const pool: FighterPick[] = [];
   for (const id of selectedSets) {
     const s = SET_BY_ID.get(id);
     if (!s) continue;
-    for (const char of s.characters[lang]) pool.push({ char, setId: id });
+    s.characters[lang].forEach((char, idx) => {
+      if (excluded.has(`${id}::${idx}`)) return;
+      pool.push({ char, setId: id });
+    });
   }
   return pool;
 }
@@ -53,10 +61,11 @@ export function roll(
   selectedSets: string[],
   mode: Mode,
   lang: Lang,
+  excludedFighters: string[] = [],
 ): { ok: true; roll: RollResult } | { ok: false; error: RollError } {
   if (selectedSets.length === 0) return { ok: false, error: { kind: 'no_sets' } };
 
-  const fighters = fighterPool(selectedSets, lang);
+  const fighters = fighterPool(selectedSets, lang, excludedFighters);
   const need = fighterCount(mode);
   if (fighters.length < need) {
     return { ok: false, error: { kind: 'not_enough_chars', need, have: fighters.length } };
@@ -84,8 +93,9 @@ export function rerollFighter(
   idx: number,
   selectedSets: string[],
   lang: Lang,
+  excludedFighters: string[] = [],
 ): RollResult {
-  const pool = fighterPool(selectedSets, lang);
+  const pool = fighterPool(selectedSets, lang, excludedFighters);
   // Exclude already-picked fighters except the one we're replacing
   const taken = new Set(
     current.fighters
@@ -121,8 +131,9 @@ export function rerollAll(
   mode: Mode,
   lang: Lang,
   current?: RollResult | null,
+  excludedFighters: string[] = [],
 ): RollResult | null {
-  const fresh = roll(selectedSets, mode, lang);
+  const fresh = roll(selectedSets, mode, lang, excludedFighters);
   if (!fresh.ok) return null;
   if (!current) return fresh.roll;
 
@@ -140,7 +151,7 @@ export function rerollAll(
   }
 
   const taken = new Set(lockedFighters.map((f) => `${f.setId}::${f.char}`));
-  const pool = fighterPool(selectedSets, lang).filter(
+  const pool = fighterPool(selectedSets, lang, excludedFighters).filter(
     (f) => !taken.has(`${f.setId}::${f.char}`),
   );
   const remaining = need - lockedFighters.length;

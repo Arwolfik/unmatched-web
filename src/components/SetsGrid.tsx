@@ -6,14 +6,19 @@ import { t } from '../lib/i18n';
 interface Props {
   lang: Lang;
   selected: string[];
+  excludedFighters: string[];
   onToggle: (id: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
+  onOpenDetail: (id: string) => void;
 }
 
-export function SetsGrid({ lang, selected, onToggle, onSelectAll, onDeselectAll }: Props) {
+export function SetsGrid({
+  lang, selected, excludedFighters, onToggle, onSelectAll, onDeselectAll, onOpenDetail,
+}: Props) {
   const s = t(lang);
   const [query, setQuery] = useState('');
+  const excluded = useMemo(() => new Set(excludedFighters), [excludedFighters]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -27,11 +32,10 @@ export function SetsGrid({ lang, selected, onToggle, onSelectAll, onDeselectAll 
   }, [query, lang]);
 
   return (
-    <section className="sets-section" aria-labelledby="sets-title">
+    <section className="sets-section" aria-label={s.yourSets}>
       <header className="section-head">
-        <h2 id="sets-title" className="section-title">{s.yourSets}</h2>
+        <span className="section-count">{s.setsCount(selected.length, SETS.length)}</span>
         <div className="section-controls">
-          <span className="section-count">{s.setsCount(selected.length, SETS.length)}</span>
           <button type="button" className="btn-tertiary" onClick={onSelectAll}>{s.selectAll}</button>
           <button type="button" className="btn-tertiary" onClick={onDeselectAll}>{s.deselectAll}</button>
         </div>
@@ -58,30 +62,47 @@ export function SetsGrid({ lang, selected, onToggle, onSelectAll, onDeselectAll 
       <div className="sets-grid">
         {filtered.map((set) => {
           const isOwned = selected.includes(set.id);
-          const charCount = set.characters[lang].length;
-          const mapCount = set.maps[lang].length;
+          const totalChars = set.characters[lang].length;
+          const includedChars = isOwned
+            ? totalChars - set.characters[lang].filter((_, i) => excluded.has(`${set.id}::${i}`)).length
+            : 0;
           return (
-            <button
+            <div
               key={set.id}
-              type="button"
-              role="checkbox"
-              aria-checked={isOwned}
               className="set-card"
-              onClick={() => onToggle(set.id)}
+              aria-checked={isOwned}
+              role="group"
             >
-              <div className="set-card-top">
-                <span className="set-code">{set.code}</span>
+              <button
+                type="button"
+                className="set-check-btn"
+                role="checkbox"
+                aria-checked={isOwned}
+                aria-label={`${isOwned ? s.deselectAll : s.selectAll}: ${set.name[lang]}`}
+                onClick={() => onToggle(set.id)}
+              >
                 <span className="set-check" aria-hidden="true">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 12l5 5L20 7" />
                   </svg>
                 </span>
-              </div>
-              <div className="set-name">{set.name[lang]}</div>
-              <div className="set-meta">
-                {s.fightersCount(charCount)} · {s.mapsCount(mapCount)}
-              </div>
-            </button>
+              </button>
+              <button
+                type="button"
+                className="set-card-main"
+                onClick={() => onOpenDetail(set.id)}
+                aria-label={`${set.name[lang]} — ${s.customizeSets}`}
+              >
+                <div className="set-code">{set.code}</div>
+                <div className="set-name">{set.name[lang]}</div>
+                <div className="set-meta">
+                  {isOwned
+                    ? s.fightersIncluded(includedChars, totalChars)
+                    : s.fightersCount(totalChars)
+                  }
+                </div>
+              </button>
+            </div>
           );
         })}
       </div>

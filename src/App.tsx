@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Nav } from './components/Nav';
-import { SetsGrid } from './components/SetsGrid';
+import { SetsSheet } from './components/SetsSheet';
+import { SetDetailSheet } from './components/SetDetailSheet';
 import { ResultPanel } from './components/ResultPanel';
 import { StickyBar } from './components/StickyBar';
 import { HistorySheet } from './components/HistorySheet';
+import { SETS } from './data/sets';
 import { ALL_SET_IDS, rerollAll, rerollFighter, rerollMap, roll } from './lib/roll';
 import type { RollError } from './lib/roll';
 import { t } from './lib/i18n';
@@ -38,17 +40,21 @@ export default function App() {
   const [lang, setLang] = useState<Lang>(getInitialLang());
   const [theme, setTheme] = useState<Theme>(getInitialTheme());
   const [selected, setSelected] = useState<string[]>(persisted.selectedSets ?? ALL_SET_IDS);
+  const [excludedFighters, setExcludedFighters] = useState<string[]>(persisted.excludedFighters ?? []);
   const [mode, setMode] = useState<Mode>(persisted.mode ?? 'duo');
   const [playerNames, setPlayerNames] = useState<string[]>(persisted.playerNames ?? DEFAULT_PLAYER_NAMES);
   const [result, setResult] = useState<RollResult | null>(persisted.result ?? null);
   const [history, setHistory] = useState<HistoryEntry[]>(persisted.history ?? []);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [setsOpen, setSetsOpen] = useState(false);
+  const [detailSetId, setDetailSetId] = useState<string | null>(null);
   const [error, setError] = useState<RollError | null>(null);
 
   // Persist anything that changes
   useEffect(() => { saveState({ lang }); }, [lang]);
   useEffect(() => { saveState({ theme }); }, [theme]);
   useEffect(() => { saveState({ selectedSets: selected }); }, [selected]);
+  useEffect(() => { saveState({ excludedFighters }); }, [excludedFighters]);
   useEffect(() => { saveState({ mode }); }, [mode]);
   useEffect(() => { saveState({ playerNames }); }, [playerNames]);
   useEffect(() => { saveState({ result }); }, [result]);
@@ -144,8 +150,12 @@ export default function App() {
   const handleSelectAll = () => setSelected(ALL_SET_IDS);
   const handleDeselectAll = () => setSelected([]);
 
+  const handleToggleExcludedFighter = (key: string) => {
+    setExcludedFighters((cur) => (cur.includes(key) ? cur.filter((x) => x !== key) : [...cur, key]));
+  };
+
   const handleRoll = () => {
-    const r = roll(selected, mode, lang);
+    const r = roll(selected, mode, lang, excludedFighters);
     if (r.ok) {
       if (result) archiveRoll(result, playerNames);
       setResult(r.roll);
@@ -162,14 +172,14 @@ export default function App() {
 
   const handleRerollFighter = (idx: number) => {
     if (!result) return;
-    setResult(rerollFighter(result, idx, selected, lang));
+    setResult(rerollFighter(result, idx, selected, lang, excludedFighters));
   };
   const handleRerollMap = () => {
     if (!result) return;
     setResult(rerollMap(result, selected, lang));
   };
   const handleRerollAll = () => {
-    const next = rerollAll(selected, mode, lang, result);
+    const next = rerollAll(selected, mode, lang, result, excludedFighters);
     if (next) {
       if (result) archiveRoll(result, playerNames);
       setResult(next);
@@ -220,9 +230,34 @@ export default function App() {
         lang={lang}
         theme={theme}
         historyCount={history.length}
+        setsCount={selected.length}
+        setsTotal={SETS.length}
         onLangChange={setLang}
         onThemeToggle={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
         onHistoryOpen={() => setHistoryOpen(true)}
+        onSetsOpen={() => setSetsOpen(true)}
+      />
+
+      <SetsSheet
+        open={setsOpen}
+        lang={lang}
+        selected={selected}
+        excludedFighters={excludedFighters}
+        onClose={() => setSetsOpen(false)}
+        onToggle={handleToggleSet}
+        onSelectAll={handleSelectAll}
+        onDeselectAll={handleDeselectAll}
+        onOpenDetail={(id) => setDetailSetId(id)}
+      />
+
+      <SetDetailSheet
+        setId={detailSetId}
+        lang={lang}
+        isOwned={detailSetId ? selected.includes(detailSetId) : false}
+        excludedFighters={excludedFighters}
+        onClose={() => setDetailSetId(null)}
+        onToggleSet={() => detailSetId && handleToggleSet(detailSetId)}
+        onToggleFighter={handleToggleExcludedFighter}
       />
 
       <HistorySheet
@@ -234,15 +269,14 @@ export default function App() {
         onClear={handleHistoryClear}
       />
 
-      <main>
-        <SetsGrid
-          lang={lang}
-          selected={selected}
-          onToggle={handleToggleSet}
-          onSelectAll={handleSelectAll}
-          onDeselectAll={handleDeselectAll}
-        />
+      <StickyBar
+        lang={lang}
+        mode={mode}
+        onModeChange={setMode}
+        onRoll={handleRoll}
+      />
 
+      <main>
         {error && (
           <div className="error-inline" role="alert">
             <div className="error-title">⚠ {errorMessage.title}</div>
@@ -271,6 +305,13 @@ export default function App() {
               <div className="empty-sub">
                 {selected.length === 0 ? s.emptySub : s.readySub}
               </div>
+              <button
+                type="button"
+                className="btn-tertiary empty-action"
+                onClick={() => setSetsOpen(true)}
+              >
+                {s.setsCount(selected.length, SETS.length)} · {s.customizeSets} →
+              </button>
             </div>
           )
         )}
@@ -290,13 +331,6 @@ export default function App() {
           </p>
         </div>
       </footer>
-
-      <StickyBar
-        lang={lang}
-        mode={mode}
-        onModeChange={setMode}
-        onRoll={handleRoll}
-      />
     </>
   );
 }

@@ -31,6 +31,13 @@ interface Strings {
   emptySub: string;
   readyTitle: string;
   readySub: string;
+  customizeSets: string;
+  manageSets: string;
+  ownSetOn: string;
+  ownSetOff: string;
+  fightersHeader: string;
+  mapsHeader: string;
+  fightersIncluded: (n: number, total: number) => string;
   errNoSets: string;
   errNoMaps: string;
   errNoQuadMaps: string;
@@ -79,20 +86,27 @@ const en: Strings = {
   duo: '/duo',
   duoSub: '1v1',
   quad: '/quad',
-  quadSub: '2v2',
+  quadSub: 'Tag team',
   ffa: '/ffa',
   ffaSub: '4-player',
   roll: 'Roll',
   rerollAll: 'Reroll all',
   rerollMap: 'Reroll map',
   rerollFighter: 'Reroll',
-  resultMeta: (m) => (m === 'duo' ? '1v1 — 2 fighters · 1 map' : m === 'quad' ? '2v2 — 4 fighters · 1 map' : '4-player free-for-all · 1 map'),
+  resultMeta: (m) => (m === 'duo' ? '1v1 — 2 fighters · 1 map' : m === 'quad' ? 'Tag team — 2 players · 2 fighters each · 1 map' : '4-player free-for-all · 1 map'),
   mapLabel: 'Map',
   playerN: (n) => `Player ${n}`,
   emptyTitle: 'Pick your sets first.',
   emptySub: 'Toggle the boxes you own above, then roll.',
   readyTitle: 'Ready to deal.',
   readySub: 'Pick a mode below and tap Roll.',
+  customizeSets: 'Customize',
+  manageSets: 'Manage sets',
+  ownSetOn: 'I own this set',
+  ownSetOff: "I don't own this set",
+  fightersHeader: 'Fighters',
+  mapsHeader: 'Maps',
+  fightersIncluded: (n, total) => `${n} of ${total} fighters in pool`,
   errNoSets: 'No sets selected. Pick at least one to roll.',
   errNoMaps: 'None of your selected sets include any maps. Add a set with a map.',
   errNoQuadMaps: 'None of your selected sets include a 4-player map. Add a bigger box (Battle of Legends, Cobble & Fog, Marvel, etc.).',
@@ -149,20 +163,27 @@ const ru: Strings = {
   duo: '/duo',
   duoSub: '1×1',
   quad: '/quad',
-  quadSub: '2×2',
+  quadSub: 'Дабл',
   ffa: '/ffa',
   ffaSub: '4 игрока',
   roll: 'Бросить',
   rerollAll: 'Перебросить всё',
   rerollMap: 'Перебросить поле',
   rerollFighter: 'Перебросить',
-  resultMeta: (m) => (m === 'duo' ? '1×1 — 2 бойца · 1 поле' : m === 'quad' ? '2×2 — 4 бойца · 1 поле' : '4 игрока, каждый сам за себя · 1 поле'),
+  resultMeta: (m) => (m === 'duo' ? '1×1 — 2 бойца · 1 поле' : m === 'quad' ? 'Дабл — 2 игрока · по 2 бойца · 1 поле' : '4 игрока, каждый сам за себя · 1 поле'),
   mapLabel: 'Поле',
   playerN: (n) => `Игрок ${n}`,
   emptyTitle: 'Сначала выберите наборы.',
   emptySub: 'Отметьте свои коробки выше — и бросайте.',
   readyTitle: 'Готово к раздаче.',
   readySub: 'Выбери режим ниже и нажми «Бросить».',
+  customizeSets: 'Настроить',
+  manageSets: 'Наборы',
+  ownSetOn: 'У меня есть этот набор',
+  ownSetOff: 'У меня нет этого набора',
+  fightersHeader: 'Бойцы',
+  mapsHeader: 'Поля',
+  fightersIncluded: (n, total) => `${n} из ${total} в пуле`,
   errNoSets: 'Не выбрано ни одного набора. Отметьте хотя бы один.',
   errNoMaps: 'В выбранных наборах нет полей. Добавьте набор с полем.',
   errNoQuadMaps: 'Ни в одном из выбранных наборов нет полей для 4 игроков. Добавьте крупный набор (Битва легенд, Булыжники и туман, Marvel и т.д.).',

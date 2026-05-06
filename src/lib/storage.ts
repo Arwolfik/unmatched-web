@@ -7,6 +7,7 @@ interface Persisted {
   lang?: Lang;
   theme?: Theme;
   selectedSets?: string[];
+  excludedFighters?: string[];
   mode?: Mode;
   playerNames?: string[];
   result?: RollResult | null;
