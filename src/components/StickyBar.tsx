@@ -43,6 +43,7 @@ export function StickyBar({ lang, mode, onModeChange, onRoll, rollDisabled }: Pr
           className="btn-primary"
           onClick={onRoll}
           disabled={rollDisabled}
+          title={`${s.roll} (R)`}
         >
           <span className="die" aria-hidden="true">🎲</span>
           <span>{s.roll}</span>

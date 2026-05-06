@@ -362,6 +362,22 @@ main {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+.result-head-share {
+  font-family: var(--font-body);
+  font-size: 12px; font-weight: 500;
+  color: var(--text-2);
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+}
+.result-head-share:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.result-head-share svg { width: 12px; height: 12px; }
 
 .fighters-row {
   display: grid;

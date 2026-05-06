@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SET_BY_ID } from '../data/sets';
 import { t } from '../lib/i18n';
+import { buildShareUrl } from '../lib/share';
 import type { Lang, RollResult } from '../types';
 
 interface Props {
@@ -28,6 +29,31 @@ export function ResultPanel({
 }: Props) {
   const s = t(lang);
   const announceRef = useRef<HTMLDivElement>(null);
+  const [shareLabel, setShareLabel] = useState<string | null>(null);
+
+  const handleShare = async () => {
+    const url = buildShareUrl(result);
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareLabel(s.shareCopied);
+    } catch {
+      // Fallback — old browsers / non-secure contexts
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        setShareLabel(s.shareCopied);
+      } catch {
+        setShareLabel(s.shareFailed);
+      }
+    }
+    window.setTimeout(() => setShareLabel(null), 2000);
+  };
 
   useEffect(() => {
     if (announceRef.current) {
@@ -49,6 +75,16 @@ export function ResultPanel({
         <span id="result-title" className="result-head-text">
           {s.resultMeta(result.mode)}
         </span>
+        <button
+          type="button"
+          className="result-head-share"
+          onClick={handleShare}
+          aria-label={s.share}
+          title={s.share}
+        >
+          <ShareIcon />
+          <span>{shareLabel ?? s.share}</span>
+        </button>
         <span className="result-head-rule" />
       </div>
 
@@ -101,32 +137,39 @@ export function ResultPanel({
         })}
       </div>
 
-      {result.map && (() => {
-        const set = SET_BY_ID.get(result.map.setId);
-        const locked = result.mapLock === true;
-        return (
-          <article className={`map-card${locked ? ' locked' : ''}`}>
-            <div className="card-corners" aria-hidden="true">
-              <span /><span /><span /><span />
-            </div>
-            {set && <div className="card-stamp">{set.code}</div>}
-            <button
-              type="button"
-              className="card-lock"
-              aria-pressed={locked}
-              aria-label={locked ? s.unlock : s.lock}
-              title={locked ? s.unlock : s.lock}
-              onClick={onToggleMapLock}
-            >
-              {locked ? <LockClosedIcon /> : <LockOpenIcon />}
-            </button>
-            <div className="map-label">{s.mapLabel}</div>
-            <h3 className="map-name">{result.map.name}</h3>
-            <div className="card-sep" aria-hidden="true" />
-            {set && <div className="map-set">{set.name[lang]}</div>}
-          </article>
-        );
-      })()}
+      {result.map && (
+        <article
+          key={`map-${result.map.setId}-${result.map.name}`}
+          className={`map-card${result.mapLock === true ? ' locked' : ''}`}
+        >
+          <div className="card-corners" aria-hidden="true">
+            <span /><span /><span /><span />
+          </div>
+          {(() => {
+            const set = SET_BY_ID.get(result.map.setId);
+            const locked = result.mapLock === true;
+            return (
+              <>
+                {set && <div className="card-stamp">{set.code}</div>}
+                <button
+                  type="button"
+                  className="card-lock"
+                  aria-pressed={locked}
+                  aria-label={locked ? s.unlock : s.lock}
+                  title={locked ? s.unlock : s.lock}
+                  onClick={onToggleMapLock}
+                >
+                  {locked ? <LockClosedIcon /> : <LockOpenIcon />}
+                </button>
+                <div className="map-label">{s.mapLabel}</div>
+                <h3 className="map-name">{result.map!.name}</h3>
+                <div className="card-sep" aria-hidden="true" />
+                {set && <div className="map-set">{set.name[lang]}</div>}
+              </>
+            );
+          })()}
+        </article>
+      )}
 
       <div className="reroll-bar" role="group" aria-label={s.rerollAll}>
         {result.fighters.map((_, idx) => (
@@ -162,6 +205,16 @@ export function ResultPanel({
         </button>
       </div>
     </section>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+      <path d="M16 6l-4-4-4 4" />
+      <path d="M12 2v13" />
+    </svg>
   );
 }
 

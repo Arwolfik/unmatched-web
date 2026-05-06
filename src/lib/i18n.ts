@@ -44,6 +44,10 @@ interface Strings {
   footerDisclaimer: string;
   footerSource: string;
   footerAuthor: string;
+  // share
+  share: string;
+  shareCopied: string;
+  shareFailed: string;
   // locks
   lock: string;
   unlock: string;
@@ -101,6 +105,9 @@ const en: Strings = {
     'A fan project — not affiliated with or endorsed by Restoration Games. All set, fighter, and map names are property of their respective rights holders.',
   footerSource: 'Source',
   footerAuthor: 'by Artem Saprykin',
+  share: 'Copy link',
+  shareCopied: 'Link copied',
+  shareFailed: 'Could not copy — try again',
   lock: 'Lock — keep on Reroll all',
   unlock: 'Unlock',
   history: 'History',
@@ -168,6 +175,9 @@ const ru: Strings = {
     'Фан-проект — не аффилирован с Restoration Games. Названия наборов, бойцов и карт принадлежат правообладателям.',
   footerSource: 'Исходники',
   footerAuthor: 'автор: Артём Сапрыкин',
+  share: 'Скопировать ссылку',
+  shareCopied: 'Ссылка скопирована',
+  shareFailed: 'Не удалось скопировать — попробуй ещё',
   lock: 'Закрепить — не менять при «Перебросить всё»',
   unlock: 'Открепить',
   history: 'История',

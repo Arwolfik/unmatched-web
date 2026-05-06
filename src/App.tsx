@@ -9,6 +9,7 @@ import type { RollError } from './lib/roll';
 import { t } from './lib/i18n';
 import { HISTORY_MAX, loadState, saveState } from './lib/storage';
 import { makeId } from './lib/time';
+import { decodeRoll } from './lib/share';
 import type { HistoryEntry, Lang, Mode, RollResult, Theme } from './types';
 
 const DEFAULT_PLAYER_NAMES: string[] = ['', '', '', ''];
@@ -68,6 +69,57 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  // Global keyboard shortcuts:
+  //   R = Roll   ·   A = Reroll all   ·   M = Reroll map
+  //   1–4 = Reroll fighter at that index   ·   H = Open history
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable
+      ) return;
+      if (historyOpen) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const k = e.key.toLowerCase();
+      if (k === 'r') { e.preventDefault(); handleRoll(); return; }
+      if (k === 'h') { e.preventDefault(); setHistoryOpen(true); return; }
+      if (!result) return;
+      if (k === 'a') { e.preventDefault(); handleRerollAll(); return; }
+      if (k === 'm' && result.map) { e.preventDefault(); handleRerollMap(); return; }
+      if (/^[1-4]$/.test(k)) {
+        const idx = parseInt(k, 10) - 1;
+        if (idx < result.fighters.length) {
+          e.preventDefault();
+          handleRerollFighter(idx);
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result, historyOpen, selected, mode, lang, playerNames]);
+
+  // On mount: if a shared roll is in the URL, restore it and clean the URL.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('r');
+    if (!token) return;
+    const decoded = decodeRoll(token);
+    if (decoded) {
+      setResult(decoded);
+      setMode(decoded.mode);
+    }
+    // Clean ?r= so refreshes don't re-trigger this
+    const url = new URL(window.location.href);
+    url.searchParams.delete('r');
+    window.history.replaceState({}, '', url.toString());
+    // Run only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Reset stale result when sets/lang/mode change underneath us
   useEffect(() => {
