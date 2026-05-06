@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/types.ts","./src/components/nav.tsx","./src/components/resultpanel.tsx","./src/components/setsgrid.tsx","./src/components/stickybar.tsx","./src/data/sets.ts","./src/lib/i18n.ts","./src/lib/roll.ts","./src/lib/storage.ts"],"version":"5.9.3"}
