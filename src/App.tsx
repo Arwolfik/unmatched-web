@@ -40,6 +40,7 @@ export default function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme());
   const [selected, setSelected] = useState<string[]>(persisted.selectedSets ?? ALL_SET_IDS);
   const [excludedFighters, setExcludedFighters] = useState<string[]>(persisted.excludedFighters ?? []);
+  const [excludedMaps, setExcludedMaps] = useState<string[]>(persisted.excludedMaps ?? []);
   const [mode, setMode] = useState<Mode>(persisted.mode ?? 'duo');
   const [playerNames, setPlayerNames] = useState<string[]>(persisted.playerNames ?? DEFAULT_PLAYER_NAMES);
   const [result, setResult] = useState<RollResult | null>(persisted.result ?? null);
@@ -53,6 +54,7 @@ export default function App() {
   useEffect(() => { saveState({ theme }); }, [theme]);
   useEffect(() => { saveState({ selectedSets: selected }); }, [selected]);
   useEffect(() => { saveState({ excludedFighters }); }, [excludedFighters]);
+  useEffect(() => { saveState({ excludedMaps }); }, [excludedMaps]);
   useEffect(() => { saveState({ mode }); }, [mode]);
   useEffect(() => { saveState({ playerNames }); }, [playerNames]);
   useEffect(() => { saveState({ result }); }, [result]);
@@ -151,9 +153,12 @@ export default function App() {
   const handleToggleExcludedFighter = (key: string) => {
     setExcludedFighters((cur) => (cur.includes(key) ? cur.filter((x) => x !== key) : [...cur, key]));
   };
+  const handleToggleExcludedMap = (key: string) => {
+    setExcludedMaps((cur) => (cur.includes(key) ? cur.filter((x) => x !== key) : [...cur, key]));
+  };
 
   const handleRoll = () => {
-    const r = roll(selected, mode, lang, excludedFighters);
+    const r = roll(selected, mode, lang, excludedFighters, excludedMaps);
     if (r.ok) {
       if (result) archiveRoll(result, playerNames);
       setResult(r.roll);
@@ -174,10 +179,10 @@ export default function App() {
   };
   const handleRerollMap = () => {
     if (!result) return;
-    setResult(rerollMap(result, selected, lang));
+    setResult(rerollMap(result, selected, lang, excludedMaps));
   };
   const handleRerollAll = () => {
-    const next = rerollAll(selected, mode, lang, result, excludedFighters);
+    const next = rerollAll(selected, mode, lang, result, excludedFighters, excludedMaps);
     if (next) {
       if (result) archiveRoll(result, playerNames);
       setResult(next);
@@ -241,11 +246,13 @@ export default function App() {
         lang={lang}
         selected={selected}
         excludedFighters={excludedFighters}
+        excludedMaps={excludedMaps}
         onClose={() => setSetsOpen(false)}
         onToggle={handleToggleSet}
         onSelectAll={handleSelectAll}
         onDeselectAll={handleDeselectAll}
         onToggleFighter={handleToggleExcludedFighter}
+        onToggleMap={handleToggleExcludedMap}
       />
 
       <HistorySheet

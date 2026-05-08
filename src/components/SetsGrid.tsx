@@ -7,19 +7,22 @@ interface Props {
   lang: Lang;
   selected: string[];
   excludedFighters: string[];
+  excludedMaps: string[];
   onToggle: (id: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
   onToggleFighter: (key: string) => void;
+  onToggleMap: (key: string) => void;
 }
 
 export function SetsGrid({
-  lang, selected, excludedFighters,
-  onToggle, onSelectAll, onDeselectAll, onToggleFighter,
+  lang, selected, excludedFighters, excludedMaps,
+  onToggle, onSelectAll, onDeselectAll, onToggleFighter, onToggleMap,
 }: Props) {
   const s = t(lang);
   const [query, setQuery] = useState('');
-  const excluded = useMemo(() => new Set(excludedFighters), [excludedFighters]);
+  const excludedFs = useMemo(() => new Set(excludedFighters), [excludedFighters]);
+  const excludedMs = useMemo(() => new Set(excludedMaps), [excludedMaps]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -62,8 +65,9 @@ export function SetsGrid({
         {filtered.map((set) => {
           const isOwned = selected.includes(set.id);
           const chars = set.characters[lang];
+          const maps = set.maps[lang];
           const includedChars = isOwned
-            ? chars.length - chars.filter((_, i) => excluded.has(`${set.id}::${i}`)).length
+            ? chars.length - chars.filter((_, i) => excludedFs.has(`${set.id}::${i}`)).length
             : 0;
           return (
             <li key={set.id} className={`set-row${isOwned ? ' owned' : ''}`}>
@@ -87,29 +91,63 @@ export function SetsGrid({
               </button>
 
               {isOwned && (
-                <div className="char-chips" role="group" aria-label={s.fightersHeader}>
-                  {chars.map((char, idx) => {
-                    const key = `${set.id}::${idx}`;
-                    const on = !excluded.has(key);
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        role="checkbox"
-                        aria-checked={on}
-                        className={`char-chip${on ? ' on' : ''}`}
-                        onClick={() => onToggleFighter(key)}
-                      >
-                        <span className="set-check" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M5 12l5 5L20 7" />
-                          </svg>
-                        </span>
-                        <span>{char}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                <>
+                  <div className="chip-row">
+                    <span className="chip-row-label">{s.fightersHeader}</span>
+                    <div className="char-chips" role="group" aria-label={s.fightersHeader}>
+                      {chars.map((char, idx) => {
+                        const key = `${set.id}::${idx}`;
+                        const on = !excludedFs.has(key);
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            role="checkbox"
+                            aria-checked={on}
+                            className={`char-chip${on ? ' on' : ''}`}
+                            onClick={() => onToggleFighter(key)}
+                          >
+                            <span className="set-check" aria-hidden="true">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M5 12l5 5L20 7" />
+                              </svg>
+                            </span>
+                            <span>{char}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {maps.length > 0 && (
+                    <div className="chip-row chip-row-maps">
+                      <span className="chip-row-label">{s.mapsHeader}</span>
+                      <div className="char-chips" role="group" aria-label={s.mapsHeader}>
+                        {maps.map((map, idx) => {
+                          const key = `${set.id}::${idx}`;
+                          const on = !excludedMs.has(key);
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              role="checkbox"
+                              aria-checked={on}
+                              className={`char-chip${on ? ' on' : ''}`}
+                              onClick={() => onToggleMap(key)}
+                            >
+                              <span className="set-check" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M5 12l5 5L20 7" />
+                                </svg>
+                              </span>
+                              <span>{map}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </li>
           );

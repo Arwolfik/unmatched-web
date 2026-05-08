@@ -21,14 +21,23 @@ export function fighterPool(
 }
 
 /** Maps from selected sets, filtered by mode. quad/ffa require quad_map=true. */
-export function mapPool(selectedSets: string[], lang: Lang, mode: Mode): MapPick[] {
+export function mapPool(
+  selectedSets: string[],
+  lang: Lang,
+  mode: Mode,
+  excludedMaps: string[] = [],
+): MapPick[] {
+  const excluded = new Set(excludedMaps);
   const pool: MapPick[] = [];
   const requireQuad = mode !== 'duo';
   for (const id of selectedSets) {
     const s = SET_BY_ID.get(id);
     if (!s) continue;
     if (requireQuad && !s.quad_map) continue;
-    for (const name of s.maps[lang]) pool.push({ name, setId: id });
+    s.maps[lang].forEach((name, idx) => {
+      if (excluded.has(`${id}::${idx}`)) return;
+      pool.push({ name, setId: id });
+    });
   }
   return pool;
 }
@@ -62,6 +71,7 @@ export function roll(
   mode: Mode,
   lang: Lang,
   excludedFighters: string[] = [],
+  excludedMaps: string[] = [],
 ): { ok: true; roll: RollResult } | { ok: false; error: RollError } {
   if (selectedSets.length === 0) return { ok: false, error: { kind: 'no_sets' } };
 
@@ -71,9 +81,9 @@ export function roll(
     return { ok: false, error: { kind: 'not_enough_chars', need, have: fighters.length } };
   }
 
-  const maps = mapPool(selectedSets, lang, mode);
+  const maps = mapPool(selectedSets, lang, mode, excludedMaps);
   if (maps.length === 0) {
-    const anyMaps = mapPool(selectedSets, lang, 'duo').length > 0;
+    const anyMaps = mapPool(selectedSets, lang, 'duo', excludedMaps).length > 0;
     return { ok: false, error: { kind: anyMaps ? 'no_quad_maps' : 'no_maps' } };
   }
 
@@ -117,8 +127,9 @@ export function rerollMap(
   current: RollResult,
   selectedSets: string[],
   lang: Lang,
+  excludedMaps: string[] = [],
 ): RollResult {
-  const pool = mapPool(selectedSets, lang, current.mode);
+  const pool = mapPool(selectedSets, lang, current.mode, excludedMaps);
   if (pool.length === 0) return current;
   const without = current.map
     ? pool.filter((m) => `${m.setId}::${m.name}` !== `${current.map!.setId}::${current.map!.name}`)
@@ -132,8 +143,9 @@ export function rerollAll(
   lang: Lang,
   current?: RollResult | null,
   excludedFighters: string[] = [],
+  excludedMaps: string[] = [],
 ): RollResult | null {
-  const fresh = roll(selectedSets, mode, lang, excludedFighters);
+  const fresh = roll(selectedSets, mode, lang, excludedFighters, excludedMaps);
   if (!fresh.ok) return null;
   if (!current) return fresh.roll;
 

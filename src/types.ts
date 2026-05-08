@@ -39,6 +39,8 @@ export interface AppState {
   /** Excluded fighters as `${setId}::${index}` keys.
    *  Indexed (not by name) so the value persists across language switches. */
   excludedFighters: string[];
+  /** Excluded maps — same `${setId}::${index}` shape. */
+  excludedMaps: string[];
   mode: Mode;
   roll: RollResult | null;
   playerNames: string[]; // length 4 — overrides default labels in results

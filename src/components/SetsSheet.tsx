@@ -8,15 +8,18 @@ interface Props {
   lang: Lang;
   selected: string[];
   excludedFighters: string[];
+  excludedMaps: string[];
   onClose: () => void;
   onToggle: (id: string) => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
   onToggleFighter: (key: string) => void;
+  onToggleMap: (key: string) => void;
 }
 
 export function SetsSheet({
-  open, lang, selected, excludedFighters, onClose, onToggle, onSelectAll, onDeselectAll, onToggleFighter,
+  open, lang, selected, excludedFighters, excludedMaps,
+  onClose, onToggle, onSelectAll, onDeselectAll, onToggleFighter, onToggleMap,
 }: Props) {
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -65,10 +68,12 @@ export function SetsSheet({
             lang={lang}
             selected={selected}
             excludedFighters={excludedFighters}
+            excludedMaps={excludedMaps}
             onToggle={onToggle}
             onSelectAll={onSelectAll}
             onDeselectAll={onDeselectAll}
             onToggleFighter={onToggleFighter}
+            onToggleMap={onToggleMap}
           />
         </div>
       </div>
