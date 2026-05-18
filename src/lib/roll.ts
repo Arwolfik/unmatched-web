@@ -1,4 +1,5 @@
 import { SETS, SET_BY_ID } from '../data/sets';
+import { getMiniImage, getMapImage } from '../data/box-images';
 import type { FighterPick, Lang, MapPick, Mode, RollResult } from '../types';
 
 /** All fighters from the given set IDs as { char, setId, image } picks. */
@@ -14,7 +15,7 @@ export function fighterPool(
     if (!s) continue;
     s.characters[lang].forEach((char, idx) => {
       if (excluded.has(`${id}::${idx}`)) return;
-      pool.push({ char, setId: id, image: s.characterImages?.[idx] });
+      pool.push({ char, setId: id, image: getMiniImage(id, idx) });
     });
   }
   return pool;
@@ -36,7 +37,7 @@ export function mapPool(
     if (requireQuad && !s.quad_map) continue;
     s.maps[lang].forEach((name, idx) => {
       if (excluded.has(`${id}::${idx}`)) return;
-      pool.push({ name, setId: id, image: s.mapImages?.[idx] });
+      pool.push({ name, setId: id, image: getMapImage(id, idx) });
     });
   }
   return pool;
