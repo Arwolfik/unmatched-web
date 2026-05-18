@@ -4,6 +4,7 @@ import { SetsSheet } from './components/SetsSheet';
 import { ResultPanel } from './components/ResultPanel';
 import { StickyBar } from './components/StickyBar';
 import { HistorySheet } from './components/HistorySheet';
+import { DisclaimerBanner } from './components/DisclaimerBanner';
 import { SETS } from './data/sets';
 import { ALL_SET_IDS, rerollAll, rerollFighter, rerollMap, roll } from './lib/roll';
 import type { RollError } from './lib/roll';
@@ -240,6 +241,8 @@ export default function App() {
         onHistoryOpen={() => setHistoryOpen(true)}
         onSetsOpen={() => setSetsOpen(true)}
       />
+
+      <DisclaimerBanner lang={lang} />
 
       <SetsSheet
         open={setsOpen}

@@ -10,16 +10,23 @@ export interface SetDef {
   quad_map: boolean;
   characters: Record<Lang, string[]>;
   maps: Record<Lang, string[]>;
+  /** Optional images, index-aligned with characters/maps arrays. */
+  characterImages?: string[];
+  mapImages?: string[];
+  /** Optional set box cover image. */
+  boxImage?: string;
 }
 
 export interface FighterPick {
   char: string;
   setId: string;
+  image?: string;
 }
 
 export interface MapPick {
   name: string;
   setId: string;
+  image?: string;
 }
 
 export interface RollResult {

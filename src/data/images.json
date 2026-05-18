@@ -1,0 +1,301 @@
+[
+  {
+    "id": "bol1",
+    "name": "Battle of Legends Vol. 1",
+    "bggId": 274637,
+    "bggUrl": "https://boardgamegeek.com/boardgame/274637/unmatched-battle-of-legends-volume-one",
+    "boxImage": "https://cf.geekdo-images.com/4AlLbprNustr9G7pbkGRuw__itemrep@2x/img/kXRoA2ldUqPG0gkF_CQkldwMYf8=/fit-in/492x600/filters:strip_icc()/pic4621579.jpg",
+    "characters": [
+      "Medusa",
+      "Sinbad",
+      "Alice",
+      "King Arthur"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "bol2",
+    "name": "Battle of Legends Vol. 2",
+    "bggId": 335764,
+    "bggUrl": "https://boardgamegeek.com/boardgame/335764/unmatched-battle-of-legends-volume-two",
+    "boxImage": "https://cf.geekdo-images.com/_N9ueJu-Vaq656p7HSI9sw__itemrep@2x/img/GVyEbOw63bwuZe9ym6VUa45aK74=/fit-in/492x600/filters:strip_icc()/pic6267930.jpg",
+    "characters": [
+      "Sun Wukong",
+      "Yennenga",
+      "Bloody Mary",
+      "Achilles"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "bol3",
+    "name": "Battle of Legends Vol. 3",
+    "bggId": 439765,
+    "bggUrl": "https://boardgamegeek.com/boardgame/439765/unmatched-battle-of-legends-volume-three",
+    "boxImage": "https://cf.geekdo-images.com/L1IaHLvM_Ii0IvixFFZm8g__itemrep@2x/img/Vv302ZE7LVkZeeKNYvZd3BxfaRU=/fit-in/492x600/filters:strip_icc()/pic8721897.jpg",
+    "characters": [
+      "Blackbeard",
+      "Chupacabra",
+      "Pandora",
+      "Loki"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "robin",
+    "name": "Robin Hood vs. Bigfoot",
+    "bggId": 274638,
+    "bggUrl": "https://boardgamegeek.com/boardgame/274638/unmatched-robin-hood-vs-bigfoot",
+    "boxImage": "https://cf.geekdo-images.com/5Fr8QPIazZRgEMnN2bwJ0g__itemrep@2x/img/-FpyDyX1iino4iGX6YQIMhhuOLY=/fit-in/492x600/filters:strip_icc()/pic4621589.jpg",
+    "characters": [
+      "Robin Hood",
+      "Bigfoot"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "houdini",
+    "name": "Houdini vs. The Genie",
+    "bggId": 354544,
+    "bggUrl": "https://boardgamegeek.com/boardgame/354544/unmatched-houdini-vs-the-genie",
+    "boxImage": "https://cf.geekdo-images.com/hKve9gkleO4Kp9T1vnJVEg__itemrep@2x/img/8StGpGr_YloHomu4B4w4ENgv18Q=/fit-in/492x600/filters:strip_icc()/pic6918007.jpg",
+    "characters": [
+      "Houdini",
+      "The Genie"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "lrrh",
+    "name": "Little Red Riding Hood vs. Beowulf",
+    "bggId": 325635,
+    "bggUrl": "https://boardgamegeek.com/boardgame/325635/unmatched-little-red-riding-hood-vs-beowulf",
+    "boxImage": "https://cf.geekdo-images.com/7CFgBadtCNf5Mzi1nsrL2Q__itemrep@2x/img/xbR152vmWGnadUDvpiihIdG63O0=/fit-in/492x600/filters:strip_icc()/pic5822480.jpg",
+    "characters": [
+      "Little Red Riding Hood",
+      "Beowulf"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "japan",
+    "name": "Sun's Origin",
+    "bggId": 383469,
+    "bggUrl": "https://boardgamegeek.com/boardgame/383469/unmatched-suns-origin",
+    "boxImage": "https://cf.geekdo-images.com/i7n6LkRIskDq1438AgO0VA__itemrep@2x/img/y_-04FPhGBJ6P1T2IALvGwBxvlg=/fit-in/492x600/filters:strip_icc()/pic7437242.jpg",
+    "characters": [
+      "Oda Nobunaga",
+      "Tomoe"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "ali_lee",
+    "name": "Muhammad Ali vs Bruce Lee",
+    "bggId": 428308,
+    "bggUrl": "https://boardgamegeek.com/boardgamecompilation/428308/unmatched-lee-vs-ali",
+    "boxImage": "https://cf.geekdo-images.com/0cKAx_d2KTNWMktH0EKmzg__itemrep@2x/img/YV4x-EDSiAmDD1sAVVT4GBvVwiY=/fit-in/492x600/filters:strip_icc()/pic9258569.jpg",
+    "characters": [
+      "Muhammad Ali",
+      "Bruce Lee"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "cobble",
+    "name": "Cobble & Fog",
+    "bggId": 294484,
+    "bggUrl": "https://boardgamegeek.com/boardgame/294484/unmatched-cobble-and-fog",
+    "boxImage": "https://cf.geekdo-images.com/iyIO6udRfIn0xM1rIxyO2g__itemrep@2x/img/IT_g0b10F0L-SaIpKaCy-Cu36kM=/fit-in/492x600/filters:strip_icc()/pic5056685.jpg",
+    "characters": [
+      "Sherlock Holmes",
+      "Jekyll & Hyde",
+      "Invisible Man",
+      "Dracula"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "slings",
+    "name": "Slings & Arrows",
+    "bggId": 415945,
+    "bggUrl": "https://boardgamegeek.com/boardgame/415945/unmatched-slings-and-arrows",
+    "boxImage": "https://cf.geekdo-images.com/Xwf7MpziRPWrrY6ZPxU-Mg__itemrep@2x/img/s_mCZ9YCe7ftv9sQv6rEJr2LRuY=/fit-in/492x600/filters:strip_icc()/pic8074963.jpg",
+    "characters": [
+      "Shakespeare",
+      "Titania",
+      "Hamlet",
+      "The Sisters"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "tales",
+    "name": "Tales to Amaze",
+    "bggId": 381297,
+    "bggUrl": "https://boardgamegeek.com/boardgame/381297/unmatched-adventures-tales-to-amaze",
+    "boxImage": "https://cf.geekdo-images.com/pDiHT-n1xpW71Ck_wiR8_g__itemrep@2x/img/GqAGWo7pROxmDMv-JJIpKl9jYOg=/fit-in/492x600/filters:strip_icc()/pic7375477.png",
+    "characters": [
+      "Annie Christmas",
+      "Jill Trent",
+      "Golden Bat",
+      "Nikola Tesla"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "buffy",
+    "name": "Buffy the Vampire Slayer",
+    "bggId": 315060,
+    "bggUrl": "https://boardgamegeek.com/boardgame/315060/unmatched-buffy-the-vampire-slayer",
+    "boxImage": "https://cf.geekdo-images.com/rSsFqioXQFqfTBE0XW9Eyw__itemrep@2x/img/Vs72jIyRGUvcEIR0K_F92kc2o7s=/fit-in/492x600/filters:strip_icc()/pic5549274.jpg",
+    "characters": [
+      "Buffy",
+      "Willow",
+      "Angel",
+      "Spike"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "tmnt",
+    "name": "Teenage Mutant Ninja Turtles",
+    "bggId": 425276,
+    "bggUrl": "https://boardgamegeek.com/boardgame/425276/unmatched-adventures-teenage-mutant-ninja-turtles",
+    "boxImage": "https://cf.geekdo-images.com/MInoTd4lhv0tBwTePOZ3DQ__itemrep@2x/img/SOWJFizrb_6LroMLCJsw7tSNdnU=/fit-in/492x600/filters:strip_icc()/pic9553060.jpg",
+    "characters": [
+      "Leonardo",
+      "Donatello",
+      "Michelangelo",
+      "Raphael",
+      "Shredder"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "jp_ingen",
+    "name": "Jurassic Park: InGen vs Raptors",
+    "bggId": 284777,
+    "bggUrl": "https://boardgamegeek.com/boardgame/284777/unmatched-jurassic-park-ingen-vs-raptors",
+    "boxImage": "https://cf.geekdo-images.com/qCMsj-DHIvGcynErPfiClQ__itemrep@2x/img/J_XVGiw6PV1cBx9FeBLwWRRIAo8=/fit-in/492x600/filters:strip_icc()/pic4854152.jpg",
+    "characters": [
+      "InGen",
+      "Raptors"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "jp_trex",
+    "name": "Jurassic Park: Dr. Sattler vs T. Rex",
+    "bggId": 284778,
+    "bggUrl": "https://boardgamegeek.com/boardgame/284778/unmatched-jurassic-park-dr-sattler-vs-t-rex",
+    "boxImage": "https://cf.geekdo-images.com/S1WeubXem2VgJHfCkkcQgA__itemrep@2x/img/XZdICegG7NIF2Szs5E74340i20Y=/fit-in/492x600/filters:strip_icc()/pic6838081.png",
+    "characters": [
+      "Dr. Sattler",
+      "T. Rex"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "witcher1",
+    "name": "The Witcher: Steel & Silver",
+    "bggId": 411860,
+    "bggUrl": "https://boardgamegeek.com/boardgame/411860/unmatched-the-witcher-steel-and-silver",
+    "boxImage": "https://cf.geekdo-images.com/Vjy4oPIY0knUxVWoKt6o4g__itemrep@2x/img/3cldIswAbAPSqUPwlSBV60WoXOQ=/fit-in/492x600/filters:strip_icc()/pic8419480.jpg",
+    "characters": [
+      "Geralt",
+      "Ciri",
+      "Ancient Leshen"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "witcher2",
+    "name": "The Witcher: Realms Fall",
+    "bggId": 411861,
+    "bggUrl": "https://boardgamegeek.com/boardgame/411861/unmatched-the-witcher-realms-fall",
+    "boxImage": "https://cf.geekdo-images.com/TksQfRZfS3cVO5qO7kTNsw__itemrep@2x/img/tOPjfgNy_ozElddzQQ0YvPOpvmk=/fit-in/492x600/filters:strip_icc()/pic8419452.jpg",
+    "characters": [
+      "Yennefer & Triss",
+      "Philippa",
+      "Eredin"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "marvel_rr",
+    "name": "Marvel: Redemption Row",
+    "bggId": 326933,
+    "bggUrl": "https://boardgamegeek.com/boardgame/326933/unmatched-redemption-row",
+    "boxImage": "https://cf.geekdo-images.com/XJMvbKMR47CvYkkXdjnjrw__itemrep@2x/img/fKqoN-XbNhkr4pRFHgqimu9uedk=/fit-in/492x600/filters:strip_icc()/pic5855222.jpg",
+    "characters": [
+      "Luke Cage",
+      "Ghost Rider",
+      "Moon Knight"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "marvel_hk",
+    "name": "Marvel: Hell's Kitchen",
+    "bggId": 326934,
+    "bggUrl": "https://boardgamegeek.com/boardgame/326934/unmatched-hells-kitchen",
+    "boxImage": "https://cf.geekdo-images.com/agYSj-3SR-qMvNeQZ08zLA__itemrep@2x/img/Feu9fyV-XLxIS4zieLPJZ95CYkA=/fit-in/492x600/filters:strip_icc()/pic5855220.jpg",
+    "characters": [
+      "Daredevil",
+      "Elektra",
+      "Bullseye"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "marvel_ts",
+    "name": "Marvel: Teen Spirit",
+    "bggId": 326936,
+    "bggUrl": "https://boardgamegeek.com/boardgame/326936/unmatched-teen-spirit",
+    "boxImage": "https://cf.geekdo-images.com/bknTHvLMqPTC4GxsMkYvAA__itemrep@2x/img/JWsC4bm3hHNJfD2AQuH9BEQcmbg=/fit-in/492x600/filters:strip_icc()/pic7248461.jpg",
+    "characters": [
+      "Ms. Marvel",
+      "Squirrel Girl",
+      "Cloak & Dagger"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "marvel_kc",
+    "name": "Marvel: For King and Country",
+    "bggId": 326937,
+    "bggUrl": "https://boardgamegeek.com/boardgame/326937/unmatched-for-king-and-country",
+    "boxImage": "https://cf.geekdo-images.com/g4M_mRTZooBmPq7z97M-jg__itemrep@2x/img/S3VThhVt8UAnsHRDKLpPoH14V3I=/fit-in/492x600/filters:strip_icc()/pic7091998.jpg",
+    "characters": [
+      "Black Widow",
+      "Black Panther",
+      "Winter Soldier"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "marvel_bb",
+    "name": "Marvel: Brains and Brawn",
+    "bggId": 383467,
+    "bggUrl": "https://boardgamegeek.com/boardgame/383467/unmatched-brains-and-brawn",
+    "boxImage": "https://cf.geekdo-images.com/mglq0PQqyQs0yRmPZCO8lA__itemrep@2x/img/Xim5Kwud1e8BIAvwn2AWwIjvtw8=/fit-in/492x600/filters:strip_icc()/pic7437241.jpg",
+    "characters": [
+      "Spider-Man",
+      "Doctor Strange",
+      "She-Hulk"
+    ],
+    "characterImages": null
+  },
+  {
+    "id": "deadpool",
+    "name": "Deadpool",
+    "bggId": 335386,
+    "bggUrl": "https://boardgamegeek.com/boardgameexpansion/335386/unmatched-deadpool",
+    "boxImage": "https://cf.geekdo-images.com/H3Zv6hbRQnrvLax8YpNrVA__itemrep@2x/img/ahSGfj3Pj5adjEZ4WkT3rLRN-RE=/fit-in/492x600/filters:strip_icc()/pic6086605.jpg",
+    "characters": [
+      "Deadpool"
+    ],
+    "characterImages": null
+  }
+]

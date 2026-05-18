@@ -78,8 +78,13 @@ export function ResultPanel({
     return (
       <article
         key={`${idx}-${f.setId}-${f.char}`}
-        className={`fighter-card stagger-${idx + 1}${locked ? ' locked' : ''}`}
+        className={`fighter-card stagger-${idx + 1}${locked ? ' locked' : ''}${f.image ? ' has-image' : ''}`}
       >
+        {f.image && (
+          <div className="card-image" aria-hidden="true">
+            <img src={f.image} alt="" loading="lazy" />
+          </div>
+        )}
         <div className="card-corners" aria-hidden="true">
           <span /><span /><span /><span />
         </div>
@@ -190,8 +195,13 @@ export function ResultPanel({
       {result.map && (
         <article
           key={`map-${result.map.setId}-${result.map.name}`}
-          className={`map-card${result.mapLock === true ? ' locked' : ''}`}
+          className={`map-card${result.mapLock === true ? ' locked' : ''}${result.map.image ? ' has-image' : ''}`}
         >
+          {result.map.image && (
+            <div className="card-image map-image" aria-hidden="true">
+              <img src={result.map.image} alt="" loading="lazy" />
+            </div>
+          )}
           <div className="card-corners" aria-hidden="true">
             <span /><span /><span /><span />
           </div>

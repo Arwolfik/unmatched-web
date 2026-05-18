@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { SETS } from '../data/sets';
+import { getBoxImage } from '../data/box-images';
 import type { Lang } from '../types';
 import { t } from '../lib/i18n';
 
@@ -83,7 +84,16 @@ export function SetsGrid({
                     <path d="M5 12l5 5L20 7" />
                   </svg>
                 </span>
-                <span className="set-row-code">{set.code}</span>
+                {(() => {
+                  const box = getBoxImage(set.id, lang);
+                  return box ? (
+                    <span className="set-row-thumb" aria-hidden="true">
+                      <img src={box} alt="" loading="lazy" />
+                    </span>
+                  ) : (
+                    <span className="set-row-code">{set.code}</span>
+                  );
+                })()}
                 <span className="set-row-name">{set.name[lang]}</span>
                 <span className="set-row-count">
                   {isOwned ? `${includedChars}/${chars.length}` : `${chars.length}`}

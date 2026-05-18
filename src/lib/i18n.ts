@@ -51,6 +51,9 @@ interface Strings {
   footerDisclaimer: string;
   footerSource: string;
   footerAuthor: string;
+  // top banner
+  bannerNotice: string;
+  bannerDismiss: string;
   // share
   share: string;
   shareCopied: string;
@@ -116,7 +119,10 @@ const en: Strings = {
   themeLight: 'Light theme',
   themeDark: 'Dark theme',
   footerDisclaimer:
-    'A fan project — not affiliated with or endorsed by Restoration Games. All set, fighter, and map names are property of their respective rights holders.',
+    'A fan project — not affiliated with or endorsed by Restoration Games. All set, fighter, and map names and artwork are property of their respective rights holders. Images are hotlinked from public sources for identification only; this tool is non-commercial and ad-free.',
+  bannerNotice:
+    'Fan project — not affiliated with Restoration Games. Artwork shown for identification.',
+  bannerDismiss: 'Got it',
   footerSource: 'Source',
   footerAuthor: 'by Artem Saprykin',
   share: 'Copy link',
@@ -193,7 +199,10 @@ const ru: Strings = {
   themeLight: 'Светлая тема',
   themeDark: 'Тёмная тема',
   footerDisclaimer:
-    'Фан-проект — не аффилирован с Restoration Games. Названия наборов, бойцов и карт принадлежат правообладателям.',
+    'Фан-проект — не аффилирован с Restoration Games. Названия наборов, бойцов, карт и иллюстрации принадлежат правообладателям. Изображения подгружаются с публичных источников для идентификации; проект некоммерческий, без рекламы.',
+  bannerNotice:
+    'Фан-проект — не аффилирован с Restoration Games. Изображения показаны для идентификации.',
+  bannerDismiss: 'Понятно',
   footerSource: 'Исходники',
   footerAuthor: 'автор: Артём Сапрыкин',
   share: 'Скопировать ссылку',
