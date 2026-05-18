@@ -94,8 +94,92 @@ export function getBoxImage(setId: string, lang: Lang): string | undefined {
  * Missing indices are `undefined` — UI gracefully falls back to typography.
  */
 export const MINI_IMAGES: Record<string, (string | undefined)[]> = {
-  // Cleared after first scrape pulled painted/hobbyist photos.
-  // Awaiting a publisher-photo scrape from restorationgames.com / official sources.
+  // restorationgames.com HeroCollage renders — gray factory mini + dial + card
+  bol1: [
+    'https://restorationgames.com/wp-content/uploads/2019/07/Medusa-collage.png',
+    'https://restorationgames.com/wp-content/uploads/2019/07/Sinbad-collage.png',
+    'https://restorationgames.com/wp-content/uploads/2019/07/Alice-collage.png',
+    'https://restorationgames.com/wp-content/uploads/2019/07/Arthur-collage.png',
+  ],
+  bol2: [
+    'https://restorationgames.com/wp-content/uploads/2021/11/Sun-Wukong-Collage.png',
+    'https://restorationgames.com/wp-content/uploads/2021/11/Yennenga-Collage.png',
+    'https://restorationgames.com/wp-content/uploads/2021/11/Bloody-Mary-Collage.png',
+    'https://restorationgames.com/wp-content/uploads/2021/11/Achilles-Collage.png',
+  ],
+  // robin: publisher-tagged BGG image (same group shot for both fighters)
+  robin: [
+    'https://cf.geekdo-images.com/k9pibtPAOT-R602xoN-YBw__large/img/6JO_-1smseMGSeMl8R4F7acADYk=/fit-in/1024x1024/filters:no_upscale():strip_icc()/pic4621590.png',
+    'https://cf.geekdo-images.com/k9pibtPAOT-R602xoN-YBw__large/img/6JO_-1smseMGSeMl8R4F7acADYk=/fit-in/1024x1024/filters:no_upscale():strip_icc()/pic4621590.png',
+  ],
+  houdini: [
+    'https://restorationgames.com/wp-content/uploads/2022/09/RG_Website_UM-HvtG_Collage2.png',
+    'https://restorationgames.com/wp-content/uploads/2022/09/RG_Website_UM-HvtG_Collage1.png',
+  ],
+  lrrh: [
+    'https://restorationgames.com/wp-content/uploads/2020/11/UM-LRRHvB-Little-Red.png',
+    'https://restorationgames.com/wp-content/uploads/2020/11/UM-LRRHvB-Beowulf.png',
+  ],
+  japan: [
+    'https://restorationgames.com/wp-content/uploads/2024/01/UM_SO_HeroCollage-Oda-Transparent_900x900.png',
+    'https://restorationgames.com/wp-content/uploads/2024/01/UM_SO_HeroCollage-Tomoe-Transparent_900x900.png',
+  ],
+  ali_lee: [
+    'https://restorationgames.com/wp-content/uploads/2025/08/UM-LeeAli_HeroCollage-Ali.png',
+    'https://restorationgames.com/wp-content/uploads/2025/08/UM-LeeAli_HeroCollage-Lee.png',
+  ],
+  slings: [
+    'https://restorationgames.com/wp-content/uploads/2024/03/UM_SaA_HeroCollage_Shakespeare-900x900.png',
+    'https://restorationgames.com/wp-content/uploads/2024/03/UM_SaA_HeroCollage_Titania.png',
+    'https://restorationgames.com/wp-content/uploads/2024/03/UM_SaA_HeroCollage_Hamlet.png',
+    'https://restorationgames.com/wp-content/uploads/2024/03/UM_SaA_HeroCollage_Sisters.png',
+  ],
+  // tales: publisher render on white background (clean shot, no dial/card)
+  tales: [
+    'https://restorationgames.com/wp-content/uploads/2023/09/UM_Adv_AnnieChristmas-900x1325.jpg',
+    'https://restorationgames.com/wp-content/uploads/2023/09/UM_Adv_JillTrent-900x1270.jpg',
+    'https://restorationgames.com/wp-content/uploads/2023/09/UM_Adv_GoldenBat-900x1418.jpg',
+    'https://restorationgames.com/wp-content/uploads/2023/09/UM_Adv_Tesla-900x1237.jpg',
+  ],
+  // buffy: single Mondoshop group photo, reused for all 4 fighters
+  buffy: [
+    'https://cdn.shopify.com/s/files/1/0558/2081/products/Unmatched_Buffy_B.png',
+    'https://cdn.shopify.com/s/files/1/0558/2081/products/Unmatched_Buffy_B.png',
+    'https://cdn.shopify.com/s/files/1/0558/2081/products/Unmatched_Buffy_B.png',
+    'https://cdn.shopify.com/s/files/1/0558/2081/products/Unmatched_Buffy_B.png',
+  ],
+  tmnt: [
+    'https://restorationgames.com/wp-content/uploads/2024/12/TMNT_HeroCollage-leonardo.png',
+    'https://restorationgames.com/wp-content/uploads/2024/12/TMNT_HeroCollage-Donatello.png',
+    'https://restorationgames.com/wp-content/uploads/2024/12/TMNT_HeroCollage-michelangelo.png',
+    'https://restorationgames.com/wp-content/uploads/2024/12/TMNT_HeroCollage-Raphael.png',
+    'https://restorationgames.com/wp-content/uploads/2024/12/TMNT_HeroCollage-shredder.png',
+  ],
+  // jp_ingen: single Mondoshop group photo reused
+  jp_ingen: [
+    'https://cdn.shopify.com/s/files/1/0558/2081/products/05-JurassicPark.jpg',
+    'https://cdn.shopify.com/s/files/1/0558/2081/products/05-JurassicPark.jpg',
+  ],
+  // jp_trex: this line ships pre-painted from the factory (per publisher)
+  jp_trex: [
+    'https://cf.geekdo-images.com/Tcugo8_JCT7FBwzwwQT0mA__large/img/XjJXUsoCXq5QtEQt_qSAsZ1ArJI=/fit-in/1024x1024/filters:no_upscale():strip_icc()/pic6856039.jpg',
+    'https://cf.geekdo-images.com/Tcugo8_JCT7FBwzwwQT0mA__large/img/XjJXUsoCXq5QtEQt_qSAsZ1ArJI=/fit-in/1024x1024/filters:no_upscale():strip_icc()/pic6856039.jpg',
+  ],
+  witcher1: [
+    'https://restorationgames.com/wp-content/uploads/2024/10/um_witcher_ss_collage_geralt.jpg',
+    'https://restorationgames.com/wp-content/uploads/2024/11/um_witcher_ss_collage_leshen.jpg',
+    'https://restorationgames.com/wp-content/uploads/2024/10/um_witcher_ss_collage_ciri.jpg',
+  ],
+  witcher2: [
+    'https://restorationgames.com/wp-content/uploads/2024/11/um_witcher_rf_collage_YenneferTriss.jpg',
+    'https://restorationgames.com/wp-content/uploads/2024/11/um_witcher_rf_collage_Philippa.jpg',
+    'https://restorationgames.com/wp-content/uploads/2024/11/um_witcher_rf_collage_Eredin.jpg',
+  ],
+  deadpool: [
+    'https://cf.geekdo-images.com/tQ7sLhLk1-n-y3od9Ghz0A__large/img/qjv9pwUecbvfbaF6zwX7unF9Tys=/fit-in/1024x1024/filters:no_upscale():strip_icc()/pic6086616.png',
+  ],
+  // No verified publisher photos found yet: bol3, cobble, marvel_rr, marvel_hk,
+  // marvel_ts, marvel_kc, marvel_bb. UI falls back to typography for those.
 };
 
 
