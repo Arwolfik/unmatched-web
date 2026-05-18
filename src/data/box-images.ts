@@ -178,8 +178,46 @@ export const MINI_IMAGES: Record<string, (string | undefined)[]> = {
   deadpool: [
     'https://cf.geekdo-images.com/tQ7sLhLk1-n-y3od9Ghz0A__large/img/qjv9pwUecbvfbaF6zwX7unF9Tys=/fit-in/1024x1024/filters:no_upscale():strip_icc()/pic6086616.png',
   ],
-  // No verified publisher photos found yet: bol3, cobble, marvel_rr, marvel_hk,
-  // marvel_ts, marvel_kc, marvel_bb. UI falls back to typography for those.
+  // bol3: gaga.ru group photo of all 4 minis, reused per fighter (no individual shots)
+  bol3: [
+    'https://gaga.ru/gaga/files/images/fullsize/8024/11.jpg',
+    'https://gaga.ru/gaga/files/images/fullsize/8024/11.jpg',
+    'https://gaga.ru/gaga/files/images/fullsize/8024/11.jpg',
+    'https://gaga.ru/gaga/files/images/fullsize/8024/11.jpg',
+  ],
+  // cobble: gaga.ru on-board mini close-ups (small g@g@.ru watermark in corner)
+  cobble: [
+    'https://gaga.ru/gaga/files/images/fullsize/5741/30.jpg',
+    'https://gaga.ru/gaga/files/images/fullsize/5741/28.jpg',
+    'https://gaga.ru/gaga/files/images/fullsize/5741/31.jpg',
+    'https://gaga.ru/gaga/files/images/fullsize/5741/17.jpg',
+  ],
+  // Marvel: restorationgames.com factory gray-plastic mini photos (white bg)
+  marvel_rr: [
+    'https://restorationgames.com/wp-content/uploads/2022/02/UM-MV-RR_LukeCage_1080.png',
+    'https://restorationgames.com/wp-content/uploads/2022/02/UM-MV-RR_GhostRider_1080.png',
+    'https://restorationgames.com/wp-content/uploads/2022/02/UM-MV-RR_MoonKnight_1080.png',
+  ],
+  marvel_hk: [
+    'https://restorationgames.com/wp-content/uploads/2022/02/UM-MV-HK_Daredevil_1080.png',
+    'https://restorationgames.com/wp-content/uploads/2022/02/UM-MV-HK_Elektra_1080.png',
+    'https://restorationgames.com/wp-content/uploads/2022/02/UM-MV-HK_Bullseye_1080.png',
+  ],
+  marvel_ts: [
+    'https://restorationgames.com/wp-content/uploads/2023/02/Figure_Ms-Marvel-900x877.png',
+    'https://restorationgames.com/wp-content/uploads/2023/02/Figure_Squirrel-Girl-900x877.png',
+    'https://restorationgames.com/wp-content/uploads/2023/02/Figure_Cloak-900x877.png',
+  ],
+  marvel_kc: [
+    'https://restorationgames.com/wp-content/uploads/2023/04/Figure_BlackWidow-900x877.png',
+    'https://restorationgames.com/wp-content/uploads/2023/04/Figure_BlackPanther-900x877.png',
+    'https://restorationgames.com/wp-content/uploads/2023/04/Figure_Winter-Soldier-900x877.png',
+  ],
+  marvel_bb: [
+    'https://restorationgames.com/wp-content/uploads/2023/05/Figure_Spider-Man.png',
+    'https://restorationgames.com/wp-content/uploads/2023/05/Figure_DrStrange.png',
+    'https://restorationgames.com/wp-content/uploads/2023/05/Figure_She-Hulk.png',
+  ],
 };
 
 
@@ -187,7 +225,65 @@ export const MINI_IMAGES: Record<string, (string | undefined)[]> = {
  * Index-aligned with each set's `maps` array. Playmat photos from BGG.
  */
 export const MAP_IMAGES: Record<string, (string | undefined)[]> = {
-  // Cleared after first scrape pulled fan-made 3D playmats — awaiting publisher photos.
+  // Publisher near-overhead setup spreads (Restoration Games + Mondoshop) and
+  // gaga.ru product gallery photos. No truly flat playmat scans exist from the
+  // publishers — these are 3/4 near-top-down views of the actual map board.
+  bol1: [
+    'https://restorationgames.com/wp-content/uploads/2019/07/UM-BoLv1-game-setup-1.png',
+    undefined,
+  ],
+  bol2: [
+    'https://restorationgames.com/wp-content/uploads/2021/11/UM-BoLv2-game-setup-2-transparent.png',
+  ],
+  // bol3: same wide box+contents shot for both maps (partial coverage)
+  bol3: [
+    'https://gaga.ru/gaga/files/images/fullsize/8024/2.jpg',
+    'https://gaga.ru/gaga/files/images/fullsize/8024/2.jpg',
+  ],
+  robin: [
+    'https://gaga.ru/gaga/files/images/fullsize/3021/4.jpg',
+  ],
+  houdini: [
+    'https://restorationgames.com/wp-content/uploads/2022/09/UM-HoudinivtheGenie-game-setup-white-scaled-900x540-1.jpg',
+  ],
+  lrrh: [
+    'https://gaga.ru/gaga/files/images/fullsize/6352/14.jpg',
+  ],
+  cobble: [
+    'https://restorationgames.com/wp-content/uploads/2020/05/UM-CaF-game-setup-white-scaled.jpg',
+    'https://gaga.ru/gaga/files/images/fullsize/5741/3.jpg',
+  ],
+  slings: [
+    'https://gaga.ru/gaga/files/images/fullsize/7430/4.jpg',
+  ],
+  buffy: [
+    'https://mondoshop.com/cdn/shop/products/Unmatched_Buffy_E.jpg?v=1667699903&width=1500',
+    'https://mondoshop.com/cdn/shop/products/Unmatched_Buffy_N.jpg?v=1667699946&width=1500',
+  ],
+  jp_ingen: [
+    'https://restorationgames.com/wp-content/uploads/2021/03/01-JurassicPark-Medium.jpg',
+  ],
+  witcher1: [
+    'https://gaga.ru/gaga/files/images/fullsize/7787/2.jpg',
+    'https://gaga.ru/gaga/files/images/fullsize/7786/23.jpg',
+  ],
+  marvel_rr: [
+    'https://restorationgames.com/wp-content/uploads/2022/02/UM-MV-RR_Setup-mockup_1080.png',
+  ],
+  marvel_hk: [
+    'https://restorationgames.com/wp-content/uploads/2022/03/UM-MV-HK_Setup-mockup_900x450.png',
+  ],
+  marvel_ts: [
+    'https://restorationgames.com/wp-content/uploads/2023/02/UM-M-TeenSpirit-Mock-Setup-900x540-1.png',
+  ],
+  marvel_kc: [
+    'https://restorationgames.com/wp-content/uploads/2023/04/UM-M-KaC-Mock-Setup.png',
+  ],
+  marvel_bb: [
+    'https://restorationgames.com/wp-content/uploads/2023/05/UM-M-BaB-Mock-Setup-web.png',
+  ],
+  // tmnt: only a decorative thumbnail exists, not the actual playmats — skip.
+  // japan, jp_trex: no publisher map photos found yet.
 };
 
 export function getMiniImage(setId: string, idx: number): string | undefined {
