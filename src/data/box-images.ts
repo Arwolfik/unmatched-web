@@ -185,12 +185,14 @@ export const MINI_IMAGES: Record<string, (string | undefined)[]> = {
     'https://gaga.ru/gaga/files/images/fullsize/8024/11.jpg',
     'https://gaga.ru/gaga/files/images/fullsize/8024/11.jpg',
   ],
-  // cobble: gaga.ru on-board mini close-ups (small g@g@.ru watermark in corner)
+  // cobble: only Jekyll & Hyde (two-figure base) is visually unambiguous.
+  // Sherlock / Invisible Man / Dracula gaga.ru shots couldn't be reliably told
+  // apart (two were near-identical) — left undefined to avoid misattribution.
   cobble: [
-    'https://gaga.ru/gaga/files/images/fullsize/5741/30.jpg',
+    undefined,
     'https://gaga.ru/gaga/files/images/fullsize/5741/28.jpg',
-    'https://gaga.ru/gaga/files/images/fullsize/5741/31.jpg',
-    'https://gaga.ru/gaga/files/images/fullsize/5741/17.jpg',
+    undefined,
+    undefined,
   ],
   // Marvel: restorationgames.com factory gray-plastic mini photos (white bg)
   marvel_rr: [
