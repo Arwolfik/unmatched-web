@@ -1,0 +1,24 @@
+{
+  "cobble_minis": {
+    "0": "https://gaga.ru/gaga/files/images/fullsize/5741/30.jpg",
+    "2": "https://gaga.ru/gaga/files/images/fullsize/5741/17.jpg",
+    "3": "https://gaga.ru/gaga/files/images/fullsize/5741/31.jpg"
+  },
+  "maps": {
+    "bol1_seven_seas": "https://hobbygames.ru/image/cache/hobbygames_beta/data/Gaga/Unmatched_Bitva_Legend/UnMatched_08-1980x1980-wm.webp",
+    "japan": "https://hobbygames.ru/image/cache/hobbygames_beta/data/-new/gaga/unmatched/rodina-solnca/um-rodina-solnca-04-1980x1980-wm.webp",
+    "tmnt_big_apple": null,
+    "tmnt_technodrome": null,
+    "jp_trex": "https://restorationgames.com/wp-content/uploads/2022/04/UM-JP2-Setup-mockup_1080.png"
+  },
+  "_evidence": {
+    "cobble_minis.0 (Sherlock Holmes)": "gaga.ru 5741/30.jpg: gray factory-plastic mini of an upright man in a long coat wearing a brimmed/deerstalker hat, standing on the Cobble & Fog 'giant boots' background art panel — the Sherlock board side. Coat + hat = Sherlock.",
+    "cobble_minis.2 (Invisible Man)": "gaga.ru 5741/17.jpg: gray mini, arms spread, gloved hands, long coat over suit, and crucially the HEAD is wrapped in horizontal bandage strips with no facial features. Daytime street background. Bandage-wrapped/empty head = Invisible Man.",
+    "cobble_minis.3 (Dracula)": "gaga.ru 5741/31.jpg: gray mini, gaunt DEFINED face with slicked-back pointed hair, formal long coat over vest, arms spread with claw-like open hands, set against a dramatic red background art panel with a large contorted/screaming vampiric face. Gaunt formal vampire = Dracula. NOTE: corrects a prior file that had 17/31 swapped — verified visually that 17 = bandaged head and 31 = gaunt vampire face.",
+    "maps.bol1_seven_seas": "hobbygames.ru BoL Vol.1 (Битва Легенд) gallery image 08: near-top-down photo of the actual printed playmat showing a green forested ruins area, sandy beach, a blue water channel down the center, and a wooden ship deck with a treasure chest on the right — the Sarpedon / Seven Seas ship-and-shore map side. GaGa distributor photo, HOBBY GAMES watermark.",
+    "maps.japan": "hobbygames.ru Sun's Origin (Родина Солнца) gallery image 04: near-top-down photo of the actual printed Azuchi Castle playmat (red wooden-floor hall + tan/green hex zones) with the Oda/Tomoe decks and health dials resting on it. Best available publisher/distributor top-down of the printed Japan map. GaGa distributor photo, HOBBY GAMES watermark.",
+    "maps.tmnt_big_apple": "NULL — no compliant image found. Restoration Games' TMNT product/blog pages publish only box-cover, hero-collage, card, and an info-icon 'GameUtility' graphic. The Big Apple map appears only as a small partial crop inside the marketing 'Stop the Villains' splash with Shredder standing on it — not a top-down view of the printed playmat. No Russian retail gallery with a separate Big Apple map photo exists yet (recent release).",
+    "maps.tmnt_technodrome": "NULL — same as Big Apple. Technodrome map only appears as a small partial crop inside the marketing splash (Krang standing on it). No publisher top-down playmat photo available.",
+    "maps.jp_trex": "restorationgames.com UM-JP2-Setup-mockup_1080.png: official Restoration Games near-overhead game-setup spread for Sattler vs T. Rex showing the actual printed T. Rex Paddock playmat (dark blue/teal hex map) laid out with the factory-painted T. Rex mini, cards, and tokens. Acceptable publisher setup spread per spec."
+  }
+}

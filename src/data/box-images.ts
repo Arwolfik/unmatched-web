@@ -185,14 +185,14 @@ export const MINI_IMAGES: Record<string, (string | undefined)[]> = {
     'https://gaga.ru/gaga/files/images/fullsize/8024/11.jpg',
     'https://gaga.ru/gaga/files/images/fullsize/8024/11.jpg',
   ],
-  // cobble: only Jekyll & Hyde (two-figure base) is visually unambiguous.
-  // Sherlock / Invisible Man / Dracula gaga.ru shots couldn't be reliably told
-  // apart (two were near-identical) — left undefined to avoid misattribution.
+  // cobble: gaga.ru on-board mini close-ups (g@g@.ru watermark). Each visually
+  // verified — Sherlock (coat+hat), Jekyll & Hyde (two figures), Invisible Man
+  // (bandage-wrapped featureless head), Dracula (gaunt vampire face).
   cobble: [
-    undefined,
+    'https://gaga.ru/gaga/files/images/fullsize/5741/30.jpg',
     'https://gaga.ru/gaga/files/images/fullsize/5741/28.jpg',
-    undefined,
-    undefined,
+    'https://gaga.ru/gaga/files/images/fullsize/5741/17.jpg',
+    'https://gaga.ru/gaga/files/images/fullsize/5741/31.jpg',
   ],
   // Marvel: restorationgames.com factory gray-plastic mini photos (white bg)
   marvel_rr: [
@@ -232,7 +232,7 @@ export const MAP_IMAGES: Record<string, (string | undefined)[]> = {
   // publishers — these are 3/4 near-top-down views of the actual map board.
   bol1: [
     'https://restorationgames.com/wp-content/uploads/2019/07/UM-BoLv1-game-setup-1.png',
-    undefined,
+    'https://hobbygames.ru/image/cache/hobbygames_beta/data/Gaga/Unmatched_Bitva_Legend/UnMatched_08-1980x1980-wm.webp',
   ],
   bol2: [
     'https://restorationgames.com/wp-content/uploads/2021/11/UM-BoLv2-game-setup-2-transparent.png',
@@ -265,6 +265,12 @@ export const MAP_IMAGES: Record<string, (string | undefined)[]> = {
   jp_ingen: [
     'https://restorationgames.com/wp-content/uploads/2021/03/01-JurassicPark-Medium.jpg',
   ],
+  jp_trex: [
+    'https://restorationgames.com/wp-content/uploads/2022/04/UM-JP2-Setup-mockup_1080.png',
+  ],
+  japan: [
+    'https://hobbygames.ru/image/cache/hobbygames_beta/data/-new/gaga/unmatched/rodina-solnca/um-rodina-solnca-04-1980x1980-wm.webp',
+  ],
   witcher1: [
     'https://gaga.ru/gaga/files/images/fullsize/7787/2.jpg',
     'https://gaga.ru/gaga/files/images/fullsize/7786/23.jpg',
@@ -284,8 +290,8 @@ export const MAP_IMAGES: Record<string, (string | undefined)[]> = {
   marvel_bb: [
     'https://restorationgames.com/wp-content/uploads/2023/05/UM-M-BaB-Mock-Setup-web.png',
   ],
-  // tmnt: only a decorative thumbnail exists, not the actual playmats — skip.
-  // japan, jp_trex: no publisher map photos found yet.
+  // tmnt: Big Apple + Technodrome maps only appear as marketing-splash crops,
+  // not top-down playmat photos — left out (typography fallback). Recent release.
 };
 
 export function getMiniImage(setId: string, idx: number): string | undefined {
