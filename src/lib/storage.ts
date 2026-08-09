@@ -1,4 +1,5 @@
 import type { HistoryEntry, Lang, Mode, RollResult, Theme } from '../types';
+import type { Tournament } from './tournament';
 
 const KEY = 'unmatched-picker:v1';
 export const HISTORY_MAX = 20;
@@ -13,6 +14,8 @@ interface Persisted {
   playerNames?: string[];
   result?: RollResult | null;
   history?: HistoryEntry[];
+  tournament?: Tournament | null;
+  view?: 'roll' | 'tournament';
 }
 
 export function loadState(): Persisted {

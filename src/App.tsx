@@ -5,7 +5,17 @@ import { ResultPanel } from './components/ResultPanel';
 import { StickyBar } from './components/StickyBar';
 import { HistorySheet } from './components/HistorySheet';
 import { DisclaimerBanner } from './components/DisclaimerBanner';
+import { TournamentView } from './components/TournamentView';
 import { SETS } from './data/sets';
+import {
+  buildFighterPool,
+  buildMapPool,
+  clearWinner,
+  createTournament,
+  getMatch,
+  setWinner,
+} from './lib/tournament';
+import type { Tournament } from './lib/tournament';
 import { ALL_SET_IDS, rerollAll, rerollFighter, rerollMap, roll } from './lib/roll';
 import type { RollError } from './lib/roll';
 import { t } from './lib/i18n';
@@ -49,6 +59,9 @@ export default function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [setsOpen, setSetsOpen] = useState(false);
   const [error, setError] = useState<RollError | null>(null);
+  const [view, setView] = useState<'roll' | 'tournament'>(persisted.view ?? 'roll');
+  const [tournament, setTournament] = useState<Tournament | null>(persisted.tournament ?? null);
+  const [tourError, setTourError] = useState<string | null>(null);
 
   // Persist anything that changes
   useEffect(() => { saveState({ lang }); }, [lang]);
@@ -60,6 +73,8 @@ export default function App() {
   useEffect(() => { saveState({ playerNames }); }, [playerNames]);
   useEffect(() => { saveState({ result }); }, [result]);
   useEffect(() => { saveState({ history }); }, [history]);
+  useEffect(() => { saveState({ tournament }); }, [tournament]);
+  useEffect(() => { saveState({ view }); }, [view]);
 
   // Archive a roll into history (used before replacing current with a fresh roll).
   const archiveRoll = (r: RollResult, names: string[]) => {
@@ -88,7 +103,7 @@ export default function App() {
         target?.tagName === 'TEXTAREA' ||
         target?.isContentEditable
       ) return;
-      if (historyOpen) return;
+      if (historyOpen || setsOpen || view !== 'roll') return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       const k = e.key.toLowerCase();
@@ -108,7 +123,7 @@ export default function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [result, historyOpen, selected, mode, lang, playerNames]);
+  }, [result, historyOpen, setsOpen, view, selected, mode, lang, playerNames]);
 
   // On mount: if a shared roll is in the URL, restore it and clean the URL.
   useEffect(() => {
@@ -220,6 +235,42 @@ export default function App() {
     setHistoryOpen(false);
   };
 
+  // ── Tournament ─────────────────────────────────────────────────────────────
+  const handleTourStart = () => {
+    const r = createTournament(selected, excludedFighters, excludedMaps);
+    if (r.ok) {
+      setTournament(r.tournament);
+      setTourError(null);
+    } else {
+      setTourError(r.error === 'no_maps' ? s.tour.errNoMaps : s.tour.errNoFighters);
+    }
+  };
+
+  const handleTourRestart = () => {
+    if (tournament && !window.confirm(s.tour.restartConfirm)) return;
+    setTournament(null);
+    setTourError(null);
+  };
+
+  const handleTourWin = (matchId: string, winner: 'a' | 'b') => {
+    setTournament((cur) => (cur ? setWinner(cur, matchId, winner) : cur));
+  };
+
+  const handleTourUndo = (matchId: string) => {
+    setTournament((cur) => {
+      if (!cur) return cur;
+      // Warn only when undoing would wipe results further down the bracket.
+      const dependents = cur.matches.filter(
+        (d) =>
+          d.winner &&
+          ((d.a.kind === 'winnerOf' && d.a.matchId === matchId) ||
+            (d.b.kind === 'winnerOf' && d.b.matchId === matchId)),
+      );
+      if (dependents.length > 0 && !window.confirm(s.tour.undoConfirm)) return cur;
+      return getMatch(cur, matchId) ? clearWinner(cur, matchId) : cur;
+    });
+  };
+
   const handlePlayerRename = (idx: number, name: string) => {
     setPlayerNames((cur) => {
       const next = cur.length === 4 ? cur.slice() : ['', '', '', ''];
@@ -267,13 +318,60 @@ export default function App() {
         onClear={handleHistoryClear}
       />
 
-      <StickyBar
-        lang={lang}
-        mode={mode}
-        onModeChange={setMode}
-        onRoll={handleRoll}
-      />
+      <div className="view-tabs" role="tablist" aria-label={s.tour.title}>
+        <div className="view-tabs-inner">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'roll'}
+            className="view-tab"
+            onClick={() => setView('roll')}
+          >
+            🎲 {s.tour.navRoll}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'tournament'}
+            className="view-tab"
+            onClick={() => setView('tournament')}
+          >
+            🏆 {s.tour.nav}
+          </button>
+        </div>
+      </div>
 
+      {view === 'roll' && (
+        <StickyBar
+          lang={lang}
+          mode={mode}
+          onModeChange={setMode}
+          onRoll={handleRoll}
+        />
+      )}
+
+      {view === 'tournament' ? (
+        <main>
+          <TournamentView
+            lang={lang}
+            tournament={tournament}
+            playerNames={[
+              playerNames[0] || s.playerN(1),
+              playerNames[1] || s.playerN(2),
+            ]}
+            poolSize={buildFighterPool(selected, excludedFighters).length}
+            poolSets={selected.length}
+            poolMaps={buildMapPool(selected, excludedMaps).length}
+            error={tourError}
+            onStart={handleTourStart}
+            onRestart={handleTourRestart}
+            onWin={handleTourWin}
+            onUndo={handleTourUndo}
+            onPlayerRename={handlePlayerRename}
+            onOpenSets={() => setSetsOpen(true)}
+          />
+        </main>
+      ) : (
       <main>
         {error && (
           <div className="error-inline" role="alert">
@@ -314,6 +412,7 @@ export default function App() {
           )
         )}
       </main>
+      )}
 
       <footer className="footer">
         <div className="footer-inner">
