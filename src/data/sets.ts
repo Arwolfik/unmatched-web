@@ -51,7 +51,8 @@ export const SETS: SetDef[] = [
       en: ['Robin Hood', 'Bigfoot'],
       ru: ['Робин Гуд', 'Снежный человек'],
     },
-    maps: { en: ['Sherwood Forest'], ru: ['Шервудский лес'] },
+    // Double-sided board: Sherwood Forest / Yukon
+    maps: { en: ['Sherwood Forest', 'Yukon'], ru: ['Шервудский лес', 'Юкон'] },
   },
   {
     id: 'houdini', code: 'HOU',
@@ -177,7 +178,8 @@ export const SETS: SetDef[] = [
       en: ['Geralt of Rivia', 'Ancient Leshen', 'Ciri'],
       ru: ['Геральт из Ривии', 'Древний Лесен', 'Цири'],
     },
-    maps: { en: ['Farylund Forest', 'Kaer Morhen'], ru: ['Лес Фарилунд', 'Каэр Морхен'] },
+    // Double-sided board — index order must stay aligned with MAP_IMAGES.witcher1
+    maps: { en: ['Farylund Forest', 'Kaer Morhen'], ru: ['Ферлундский лес', 'Каэр Морхен'] },
   },
   {
     id: 'witcher2', code: 'WC2',
@@ -187,7 +189,8 @@ export const SETS: SetDef[] = [
       en: ['Yennefer & Triss', 'Philippa Eilhart', 'Eredin'],
       ru: ['Йеннефер и Трисс', 'Филиппа Эйлхарт', 'Эредин'],
     },
-    maps: { en: [], ru: [] },
+    // Double-sided board: Novigrad / Naglfar
+    maps: { en: ['Novigrad', 'Naglfar'], ru: ['Новиград', 'Нагльфар'] },
   },
 
   // ── Marvel ───────────────────────────────────────────────
