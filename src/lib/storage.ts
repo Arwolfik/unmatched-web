@@ -1,5 +1,5 @@
 import type { HistoryEntry, Lang, Mode, RollResult, Theme } from '../types';
-import type { Tournament } from './tournament';
+import type { Tournament, TourSnapshot } from './tournament';
 
 const KEY = 'unmatched-picker:v1';
 export const HISTORY_MAX = 20;
@@ -15,6 +15,8 @@ interface Persisted {
   result?: RollResult | null;
   history?: HistoryEntry[];
   tournament?: Tournament | null;
+  tournamentPast?: TourSnapshot[];
+  tournamentFuture?: TourSnapshot[];
   view?: 'roll' | 'tournament';
 }
 

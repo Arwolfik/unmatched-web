@@ -59,7 +59,16 @@ interface Strings {
     start: string;
     restart: string;
     restartConfirm: string;
-    undoConfirm: string;
+    undoConfirm: (n: number) => string;
+    undoBtn: string;
+    redoBtn: string;
+    undoTip: (label: string) => string;
+    redoTip: (label: string) => string;
+    actWin: (fighter: string) => string;
+    actUndoMatch: string;
+    actDraw: string;
+    actReset: string;
+    safetyNote: string;
     progress: (played: number, total: number) => string;
     upcoming: string;
     upcomingEmpty: string;
@@ -160,7 +169,17 @@ const en: Strings = {
     start: 'Draw the bracket',
     restart: 'New tournament',
     restartConfirm: 'Discard the current tournament and draw a new one?',
-    undoConfirm: 'Undoing this also clears the later matches that followed from it. Continue?',
+    undoConfirm: (n) =>
+      `This also clears ${n} later ${n === 1 ? 'match' : 'matches'} that followed from it. You can undo afterwards. Continue?`,
+    undoBtn: 'Undo',
+    redoBtn: 'Redo',
+    undoTip: (l) => `Undo: ${l}  (⌘Z)`,
+    redoTip: (l) => `Redo: ${l}  (⇧⌘Z)`,
+    actWin: (f) => `win — ${f}`,
+    actUndoMatch: 'cleared a result',
+    actDraw: 'new draw',
+    actReset: 'tournament reset',
+    safetyNote: 'Every action can be undone — nothing is lost by a stray tap.',
     progress: (p, t) => `${p} of ${t} matches played`,
     upcoming: 'Up next',
     upcomingEmpty: 'Nothing left to play.',
@@ -271,7 +290,17 @@ const ru: Strings = {
     start: 'Провести жеребьёвку',
     restart: 'Новый турнир',
     restartConfirm: 'Удалить текущий турнир и провести новую жеребьёвку?',
-    undoConfirm: 'Отмена сбросит и последующие матчи, которые из этого выросли. Продолжить?',
+    undoConfirm: (n) =>
+      `Сбросит ещё ${n} ${n === 1 ? 'сыгранный матч' : n < 5 ? 'сыгранных матча' : 'сыгранных матчей'} ниже по сетке. Это тоже можно будет отменить. Продолжить?`,
+    undoBtn: 'Отменить',
+    redoBtn: 'Вернуть',
+    undoTip: (l) => `Отменить: ${l}  (⌘Z)`,
+    redoTip: (l) => `Вернуть: ${l}  (⇧⌘Z)`,
+    actWin: (f) => `победа — ${f}`,
+    actUndoMatch: 'сброс результата',
+    actDraw: 'новая жеребьёвка',
+    actReset: 'сброс турнира',
+    safetyNote: 'Любое действие можно отменить — случайный тык ничего не сломает.',
     progress: (p, t) => `Сыграно ${p} из ${t} матчей`,
     upcoming: 'Ближайшие матчи',
     upcomingEmpty: 'Играть нечего — сетка пройдена.',

@@ -12,10 +12,21 @@ import {
   buildMapPool,
   clearWinner,
   createTournament,
+  dependentDecidedCount,
   getMatch,
+  resolveSlot,
   setWinner,
 } from './lib/tournament';
-import type { Tournament } from './lib/tournament';
+import type { ActionLabel, Tournament, TourSnapshot } from './lib/tournament';
+
+/** How many tournament actions can be walked back. */
+const UNDO_LIMIT = 30;
+
+interface TourHistory {
+  present: Tournament | null;
+  past: TourSnapshot[];
+  future: TourSnapshot[];
+}
 import { ALL_SET_IDS, rerollAll, rerollFighter, rerollMap, roll } from './lib/roll';
 import type { RollError } from './lib/roll';
 import { t } from './lib/i18n';
@@ -60,7 +71,17 @@ export default function App() {
   const [setsOpen, setSetsOpen] = useState(false);
   const [error, setError] = useState<RollError | null>(null);
   const [view, setView] = useState<'roll' | 'tournament'>(persisted.view ?? 'roll');
-  const [tournament, setTournament] = useState<Tournament | null>(persisted.tournament ?? null);
+  // present/past/future live in one object so an action and its undo entry can
+  // never drift apart — two clicks in the same tick would otherwise both read a
+  // stale `tournament` and silently drop one of the results.
+  const [tourHist, setTourHist] = useState<TourHistory>({
+    present: persisted.tournament ?? null,
+    past: persisted.tournamentPast ?? [],
+    future: persisted.tournamentFuture ?? [],
+  });
+  const tournament = tourHist.present;
+  const tourPast = tourHist.past;
+  const tourFuture = tourHist.future;
   const [tourError, setTourError] = useState<string | null>(null);
 
   // Persist anything that changes
@@ -73,7 +94,13 @@ export default function App() {
   useEffect(() => { saveState({ playerNames }); }, [playerNames]);
   useEffect(() => { saveState({ result }); }, [result]);
   useEffect(() => { saveState({ history }); }, [history]);
-  useEffect(() => { saveState({ tournament }); }, [tournament]);
+  useEffect(() => {
+    saveState({
+      tournament: tourHist.present,
+      tournamentPast: tourHist.past,
+      tournamentFuture: tourHist.future,
+    });
+  }, [tourHist]);
   useEffect(() => { saveState({ view }); }, [view]);
 
   // Archive a roll into history (used before replacing current with a fresh roll).
@@ -124,6 +151,22 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result, historyOpen, setsOpen, view, selected, mode, lang, playerNames]);
+
+  // Tournament undo/redo: ⌘Z / Ctrl+Z, ⇧⌘Z / Ctrl+Shift+Z
+  useEffect(() => {
+    if (view !== 'tournament') return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.isContentEditable || target?.tagName === 'INPUT') return;
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return;
+      e.preventDefault();
+      if (e.shiftKey) handleTourRedoAction();
+      else handleTourUndoAction();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, tournament, tourPast, tourFuture]);
 
   // On mount: if a shared roll is in the URL, restore it and clean the URL.
   useEffect(() => {
@@ -236,10 +279,59 @@ export default function App() {
   };
 
   // ── Tournament ─────────────────────────────────────────────────────────────
+
+  /**
+   * Every tournament mutation goes through here so it lands on the undo stack.
+   * `produce` must be pure — it runs inside the state updater and may be called
+   * more than once. Anything random (a fresh draw) is computed by the caller
+   * and passed as a plain value instead.
+   */
+  const applyTournament = (
+    produce: Tournament | null | ((cur: Tournament | null) => Tournament | null),
+    label: ActionLabel | ((cur: Tournament | null) => ActionLabel),
+  ) => {
+    setTourHist((h) => {
+      const next = typeof produce === 'function' ? produce(h.present) : produce;
+      if (next === h.present) return h;
+      const lbl = typeof label === 'function' ? label(h.present) : label;
+      return {
+        present: next,
+        past: [...h.past, { state: h.present, label: lbl }].slice(-UNDO_LIMIT),
+        future: [],
+      };
+    });
+  };
+
+  const handleTourUndoAction = () => {
+    setTourHist((h) => {
+      if (h.past.length === 0) return h;
+      const last = h.past[h.past.length - 1];
+      return {
+        present: last.state,
+        past: h.past.slice(0, -1),
+        future: [...h.future, { state: h.present, label: last.label }],
+      };
+    });
+    setTourError(null);
+  };
+
+  const handleTourRedoAction = () => {
+    setTourHist((h) => {
+      if (h.future.length === 0) return h;
+      const next = h.future[h.future.length - 1];
+      return {
+        present: next.state,
+        past: [...h.past, { state: h.present, label: next.label }].slice(-UNDO_LIMIT),
+        future: h.future.slice(0, -1),
+      };
+    });
+    setTourError(null);
+  };
+
   const handleTourStart = () => {
     const r = createTournament(selected, excludedFighters, excludedMaps);
     if (r.ok) {
-      setTournament(r.tournament);
+      applyTournament(r.tournament, { kind: 'draw' });
       setTourError(null);
     } else {
       setTourError(r.error === 'no_maps' ? s.tour.errNoMaps : s.tour.errNoFighters);
@@ -248,27 +340,30 @@ export default function App() {
 
   const handleTourRestart = () => {
     if (tournament && !window.confirm(s.tour.restartConfirm)) return;
-    setTournament(null);
+    applyTournament(null, { kind: 'reset' });
     setTourError(null);
   };
 
   const handleTourWin = (matchId: string, winner: 'a' | 'b') => {
-    setTournament((cur) => (cur ? setWinner(cur, matchId, winner) : cur));
+    applyTournament(
+      (cur) => (cur && getMatch(cur, matchId) ? setWinner(cur, matchId, winner) : cur),
+      (cur) => {
+        const m = cur ? getMatch(cur, matchId) : undefined;
+        const fighter = m && cur ? resolveSlot(cur, winner === 'a' ? m.a : m.b) : null;
+        return fighter ? { kind: 'win', fighter } : { kind: 'undoMatch' };
+      },
+    );
   };
 
   const handleTourUndo = (matchId: string) => {
-    setTournament((cur) => {
-      if (!cur) return cur;
-      // Warn only when undoing would wipe results further down the bracket.
-      const dependents = cur.matches.filter(
-        (d) =>
-          d.winner &&
-          ((d.a.kind === 'winnerOf' && d.a.matchId === matchId) ||
-            (d.b.kind === 'winnerOf' && d.b.matchId === matchId)),
-      );
-      if (dependents.length > 0 && !window.confirm(s.tour.undoConfirm)) return cur;
-      return getMatch(cur, matchId) ? clearWinner(cur, matchId) : cur;
-    });
+    if (!tournament || !getMatch(tournament, matchId)) return;
+    // Warn before wiping results further down the bracket — undo still has your back.
+    const wipes = dependentDecidedCount(tournament, matchId);
+    if (wipes > 0 && !window.confirm(s.tour.undoConfirm(wipes))) return;
+    applyTournament(
+      (cur) => (cur && getMatch(cur, matchId) ? clearWinner(cur, matchId) : cur),
+      { kind: 'undoMatch' },
+    );
   };
 
   const handlePlayerRename = (idx: number, name: string) => {
@@ -363,10 +458,14 @@ export default function App() {
             poolSets={selected.length}
             poolMaps={buildMapPool(selected, excludedMaps).length}
             error={tourError}
+            undoLabel={tourPast.length ? tourPast[tourPast.length - 1].label : null}
+            redoLabel={tourFuture.length ? tourFuture[tourFuture.length - 1].label : null}
             onStart={handleTourStart}
             onRestart={handleTourRestart}
             onWin={handleTourWin}
             onUndo={handleTourUndo}
+            onUndoAction={handleTourUndoAction}
+            onRedoAction={handleTourRedoAction}
             onPlayerRename={handlePlayerRename}
             onOpenSets={() => setSetsOpen(true)}
           />

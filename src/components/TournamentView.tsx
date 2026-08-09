@@ -14,7 +14,7 @@ import {
   sidesOf,
   upcomingMatches,
 } from '../lib/tournament';
-import type { FighterRef, TMatch, Tournament } from '../lib/tournament';
+import type { ActionLabel, FighterRef, TMatch, Tournament } from '../lib/tournament';
 import type { Lang } from '../types';
 
 interface Props {
@@ -25,22 +25,73 @@ interface Props {
   poolSets: number;
   poolMaps: number;
   error: string | null;
+  undoLabel: ActionLabel | null;
+  redoLabel: ActionLabel | null;
   onStart: () => void;
   onRestart: () => void;
   onWin: (matchId: string, winner: 'a' | 'b') => void;
   onUndo: (matchId: string) => void;
+  onUndoAction: () => void;
+  onRedoAction: () => void;
   onPlayerRename: (idx: number, name: string) => void;
   onOpenSets: () => void;
 }
 
 const UPCOMING_PREVIEW = 4;
 
+/** Structural action labels resolve here so they follow the current language. */
+function actionText(a: ActionLabel, lang: Lang): string {
+  const s = t(lang);
+  switch (a.kind) {
+    case 'win': return s.tour.actWin(fighterName(a.fighter, lang));
+    case 'undoMatch': return s.tour.actUndoMatch;
+    case 'draw': return s.tour.actDraw;
+    case 'reset': return s.tour.actReset;
+  }
+}
+
+function UndoBar({
+  lang, undoLabel, redoLabel, onUndoAction, onRedoAction,
+}: Pick<Props, 'lang' | 'undoLabel' | 'redoLabel' | 'onUndoAction' | 'onRedoAction'>) {
+  const s = t(lang);
+  return (
+    <div className="tm-undo">
+      <button
+        type="button"
+        className="tm-undo-btn"
+        onClick={onUndoAction}
+        disabled={!undoLabel}
+        title={undoLabel ? s.tour.undoTip(actionText(undoLabel, lang)) : undefined}
+      >
+        ↩ {s.tour.undoBtn}
+        {undoLabel && <span className="tm-undo-what">{actionText(undoLabel, lang)}</span>}
+      </button>
+      <button
+        type="button"
+        className="tm-undo-btn"
+        onClick={onRedoAction}
+        disabled={!redoLabel}
+        title={redoLabel ? s.tour.redoTip(actionText(redoLabel, lang)) : undefined}
+      >
+        ↪ {s.tour.redoBtn}
+      </button>
+    </div>
+  );
+}
+
 export function TournamentView(props: Props) {
   const { lang, tournament, playerNames } = props;
   const s = t(lang);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
 
-  if (!tournament) return <TournamentSetup {...props} />;
+  if (!tournament) {
+    return (
+      <>
+        <UndoBar {...props} />
+        <TournamentSetup {...props} />
+      </>
+    );
+  }
 
   const played = playedCount(tournament);
   const total = tournament.matches.length;
@@ -58,6 +109,8 @@ export function TournamentView(props: Props) {
 
   return (
     <section className="tm" aria-label={s.tour.title}>
+      <UndoBar {...props} />
+
       {/* ── Status bar ───────────────────────────────────────────── */}
       <header className="tm-status">
         <div className="tm-progress">
@@ -92,6 +145,8 @@ export function TournamentView(props: Props) {
           {s.tour.restart}
         </button>
       </header>
+
+      <p className="tm-safety">{s.tour.safetyNote}</p>
 
       {/* ── Champion ─────────────────────────────────────────────── */}
       {champ && (

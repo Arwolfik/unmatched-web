@@ -50,6 +50,21 @@ export interface Tournament {
   matches: TMatch[];
 }
 
+/**
+ * Undo stack entries. The label is stored structurally (not as a localized
+ * string) so it still reads correctly if the language is switched later.
+ */
+export type ActionLabel =
+  | { kind: 'win'; fighter: FighterRef }
+  | { kind: 'undoMatch' }
+  | { kind: 'draw' }
+  | { kind: 'reset' };
+
+export interface TourSnapshot {
+  state: Tournament | null;
+  label: ActionLabel;
+}
+
 // ── Pools ────────────────────────────────────────────────────────────────────
 
 export function buildFighterPool(selected: string[], excludedFighters: string[]): FighterRef[] {
@@ -304,9 +319,12 @@ function clone(t: Tournament): Tournament {
 }
 
 export function setWinner(t: Tournament, matchId: string, winner: 'a' | 'b'): Tournament {
+  const existing = getMatch(t, matchId);
+  // Same reference back = no state change = no undo entry. Keeps a double-tap
+  // from stacking redundant history the user then has to press undo through.
+  if (!existing || existing.winner === winner) return t;
   const next = clone(t);
-  const m = getMatch(next, matchId);
-  if (!m) return t;
+  const m = getMatch(next, matchId)!;
   m.winner = winner;
   m.playedAt = Date.now();
   // The downstream match may now be playable
@@ -314,8 +332,25 @@ export function setWinner(t: Tournament, matchId: string, winner: 'a' | 'b'): To
   return next;
 }
 
+/** How many already-played matches downstream would be wiped by undoing this one. */
+export function dependentDecidedCount(t: Tournament, matchId: string): number {
+  let n = 0;
+  const walk = (id: string) => {
+    for (const d of t.matches) {
+      const feeds =
+        (d.a.kind === 'winnerOf' && d.a.matchId === id) ||
+        (d.b.kind === 'winnerOf' && d.b.matchId === id);
+      if (feeds && d.winner) { n++; walk(d.id); }
+    }
+  };
+  walk(matchId);
+  return n;
+}
+
 /** Undo a result, cascading through every match that depended on it. */
 export function clearWinner(t: Tournament, matchId: string): Tournament {
+  const existing = getMatch(t, matchId);
+  if (!existing || existing.winner === null) return t;
   const next = clone(t);
   const reset = (id: string) => {
     const m = getMatch(next, id);
