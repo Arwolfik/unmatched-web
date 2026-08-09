@@ -288,14 +288,52 @@ export function isReady(t: Tournament, m: TMatch): boolean {
   return resolveSlot(t, m.a) !== null && resolveSlot(t, m.b) !== null;
 }
 
-/** Assign a map (from neither fighter's box, least-used first) and random sides. */
+const fighterKey = (f: FighterRef) => `${f.setId}::${f.idx}`;
+
+/**
+ * How many matches each player is already slated to play each fighter in,
+ * keyed `player::setId::idx`. Counts assigned matches, played or not — an
+ * assigned match is a commitment.
+ */
+function playCounts(t: Tournament, skipId: string): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const o of t.matches) {
+    if (o.id === skipId || o.sideA === null) continue;
+    const oa = resolveSlot(t, o.a);
+    const ob = resolveSlot(t, o.b);
+    const bump = (p: number, f: FighterRef | null) => {
+      if (!f) return;
+      const k = `${p}::${fighterKey(f)}`;
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    };
+    bump(o.sideA, oa);
+    bump(1 - o.sideA, ob);
+  }
+  return counts;
+}
+
+/** Assign a map (from neither fighter's box, least-used first) and sides. */
 function prepareIfReady(t: Tournament, m: TMatch): void {
   if (m.map && m.sideA !== null) return;
   const a = resolveSlot(t, m.a);
   const b = resolveSlot(t, m.b);
   if (!a || !b) return;
 
-  if (m.sideA === null) m.sideA = Math.random() < 0.5 ? 0 : 1;
+  if (m.sideA === null) {
+    // Hand each fighter to whoever has played it least, so nobody ends up
+    // "owning" a character as it climbs the bracket. A pure coin flip left a
+    // fighter with the same player ~50% of the time, which read as ownership.
+    // Both fighters can want the same player; then only one switch is possible
+    // and the tie breaks randomly.
+    const counts = playCounts(t, m.id);
+    const c = (p: 0 | 1, f: FighterRef) => counts.get(`${p}::${fighterKey(f)}`) ?? 0;
+    const costP0takesA = c(0, a) + c(1, b);
+    const costP1takesA = c(1, a) + c(0, b);
+    m.sideA =
+      costP0takesA < costP1takesA ? 0
+      : costP1takesA < costP0takesA ? 1
+      : Math.random() < 0.5 ? 0 : 1;
+  }
 
   if (!m.map) {
     const usage = new Map<string, number>();
