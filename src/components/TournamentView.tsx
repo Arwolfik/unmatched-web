@@ -5,7 +5,6 @@ import {
   champion,
   fighterName,
   mapName,
-  matchesByRound,
   playedCount,
   playerScores,
   resolveSlot,
@@ -43,7 +42,6 @@ export function TournamentView(props: Props) {
 
   if (!tournament) return <TournamentSetup {...props} />;
 
-  const rounds = matchesByRound(tournament);
   const played = playedCount(tournament);
   const total = tournament.matches.length;
   const scores = playerScores(tournament);
@@ -74,15 +72,17 @@ export function TournamentView(props: Props) {
           <div className="tm-score-row">
             <EditableName
               name={playerNames[0]}
+              player={0}
               onRename={(v) => props.onPlayerRename(0, v)}
             />
             <span className="tm-score-nums">
-              <b>{scores[0]}</b>
+              <b className="p0">{scores[0]}</b>
               <span className="tm-score-sep">:</span>
-              <b>{scores[1]}</b>
+              <b className="p1">{scores[1]}</b>
             </span>
             <EditableName
               name={playerNames[1]}
+              player={1}
               onRename={(v) => props.onPlayerRename(1, v)}
             />
           </div>
@@ -147,30 +147,186 @@ export function TournamentView(props: Props) {
       {/* ── Bracket ──────────────────────────────────────────────── */}
       <div className="tm-section">
         <h2 className="tm-section-title">{s.tour.bracket}</h2>
-        <div className="tm-bracket">
-          {rounds.map((round, i) => (
-            <div className="tm-col" key={i}>
-              <div className="tm-col-head">
-                {label(round[0].round)}
-                <span className="tm-col-count">{round.length}</span>
-              </div>
-              {round.map((m) => (
-                <BracketRow
-                  key={m.id}
-                  m={m}
-                  t={tournament}
-                  lang={lang}
-                  playerNames={playerNames}
-                  onUndo={props.onUndo}
-                  undoLabel={s.tour.undo}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
+        <BracketTree
+          t={tournament}
+          lang={lang}
+          playerNames={playerNames}
+          label={label}
+          onUndo={props.onUndo}
+        />
       </div>
     </section>
   );
+}
+
+// ── Bracket tree — sports-style, with connector lines ────────────────────────
+
+const BOX_W = 176;
+const BOX_H = 52;
+const PITCH = 66;   // vertical distance between adjacent round-1 matches
+const COL_GAP = 54;
+const HEADER_H = 32;
+
+function BracketTree({
+  t: tour, lang, playerNames, label, onUndo,
+}: {
+  t: Tournament;
+  lang: Lang;
+  playerNames: [string, string];
+  label: (round: number) => string;
+  onUndo: (id: string) => void;
+}) {
+  const s = t(lang);
+
+  const byRound: Record<number, TMatch[]> = {};
+  for (const m of tour.matches) (byRound[m.round] ??= []).push(m);
+
+  // Vertical placement: round 1 is evenly spaced; every later match sits
+  // centred between the two matches that feed it.
+  const y: Record<string, number> = {};
+  byRound[1].forEach((m, i) => { y[m.id] = i * PITCH; });
+  for (let r = 2; r <= tour.totalRounds; r++) {
+    byRound[r].forEach((m, i) => {
+      const a = byRound[r - 1][2 * i];
+      const b = byRound[r - 1][2 * i + 1];
+      y[m.id] = (y[a.id] + y[b.id]) / 2;
+    });
+  }
+  // Qualifiers sit level with the round-1 match they feed into.
+  if (byRound[0]) {
+    for (const q of byRound[0]) {
+      const target = byRound[1].find(
+        (m) =>
+          (m.a.kind === 'winnerOf' && m.a.matchId === q.id) ||
+          (m.b.kind === 'winnerOf' && m.b.matchId === q.id),
+      );
+      y[q.id] = target ? y[target.id] : 0;
+    }
+  }
+
+  const hasQ = Boolean(byRound[0]);
+  const colX = (round: number) => (hasQ ? round : round - 1) * (BOX_W + COL_GAP);
+  const columns = (hasQ ? 1 : 0) + tour.totalRounds;
+  const width = columns * BOX_W + (columns - 1) * COL_GAP;
+  const height = byRound[1].length * PITCH + HEADER_H;
+
+  // Elbow connectors from each feeder to the match it advances into.
+  const links: { d: string; live: boolean }[] = [];
+  for (const m of tour.matches) {
+    for (const slot of [m.a, m.b]) {
+      if (slot.kind !== 'winnerOf') continue;
+      const feeder = tour.matches.find((f) => f.id === slot.matchId);
+      if (!feeder) continue;
+      const fx = colX(feeder.round) + BOX_W;
+      const fy = y[feeder.id] + BOX_H / 2 + HEADER_H;
+      const px = colX(m.round);
+      const py = y[m.id] + BOX_H / 2 + HEADER_H;
+      const midX = fx + (px - fx) / 2;
+      links.push({
+        d: `M ${fx} ${fy} H ${midX} V ${py} H ${px}`,
+        live: feeder.winner !== null,
+      });
+    }
+  }
+
+  const roundNumbers = Object.keys(byRound).map(Number).sort((a, b) => a - b);
+
+  return (
+    <div className="tm-tree-scroll">
+      <div className="tm-tree" style={{ width, height }}>
+        <svg className="tm-tree-links" width={width} height={height} aria-hidden="true">
+          {links.map((l, i) => (
+            <path key={i} d={l.d} className={l.live ? 'tm-link live' : 'tm-link'} />
+          ))}
+        </svg>
+
+        {roundNumbers.map((r) => (
+          <div
+            key={`h${r}`}
+            className="tm-tree-head"
+            style={{ left: colX(r), width: BOX_W }}
+          >
+            {label(r)}
+            <span className="tm-tree-head-n">{byRound[r].length}</span>
+          </div>
+        ))}
+
+        {tour.matches.map((m) => (
+          <TreeBox
+            key={m.id}
+            m={m}
+            t={tour}
+            lang={lang}
+            playerNames={playerNames}
+            x={colX(m.round)}
+            y={y[m.id] + HEADER_H}
+            onUndo={onUndo}
+            undoLabel={s.tour.undo}
+            tbd={s.tour.tbd}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TreeBox({
+  m, t: tour, lang, playerNames, x, y, onUndo, undoLabel, tbd,
+}: {
+  m: TMatch;
+  t: Tournament;
+  lang: Lang;
+  playerNames: [string, string];
+  x: number;
+  y: number;
+  onUndo: (id: string) => void;
+  undoLabel: string;
+  tbd: string;
+}) {
+  const a = resolveSlot(tour, m.a);
+  const b = resolveSlot(tour, m.b);
+  const sides = sidesOf(m);
+  const decided = m.winner !== null;
+
+  const tip = [
+    m.map ? `🗺 ${mapName(m.map, lang)}` : null,
+    sides && a ? `${playerNames[sides.playerA]}: ${fighterName(a, lang)}` : null,
+    sides && b ? `${playerNames[sides.playerB]}: ${fighterName(b, lang)}` : null,
+    decided ? undoLabel : null,
+  ].filter(Boolean).join('\n');
+
+  const row = (ref_: FighterRef | null, side: 'a' | 'b') => {
+    const state = !decided ? '' : m.winner === side ? ' won' : ' lost';
+    const player = sides ? (side === 'a' ? sides.playerA : sides.playerB) : null;
+    // Colour, not just the initial — two players can share a first letter.
+    const initial = player !== null && ref_ ? (playerNames[player][0] ?? '') : '';
+    return (
+      <span className={`tm-tree-row${state}`}>
+        {initial && (
+          <span className={`tm-tree-who p${player}`} title={playerNames[player!]}>
+            {initial}
+          </span>
+        )}
+        <span className="tm-tree-name">{ref_ ? fighterName(ref_, lang) : tbd}</span>
+      </span>
+    );
+  };
+
+  const common = {
+    className: `tm-tree-box${decided ? ' decided' : ''}${!a || !b ? ' pending' : ''}`,
+    style: { left: x, top: y, width: BOX_W, height: BOX_H },
+    title: tip || undefined,
+  };
+
+  if (decided) {
+    return (
+      <button type="button" {...common} onClick={() => onUndo(m.id)} aria-label={undoLabel}>
+        {row(a, 'a')}
+        {row(b, 'b')}
+      </button>
+    );
+  }
+  return <div {...common}>{row(a, 'a')}{row(b, 'b')}</div>;
 }
 
 // ── Setup screen ─────────────────────────────────────────────────────────────
@@ -232,9 +388,17 @@ function MatchCard({
         <span className="tm-card-num">#{m.idx + 1}</span>
       </header>
 
-      <FighterSide ref_={a} lang={lang} player={sides ? playerNames[sides.playerA] : ''} />
+      <FighterSide
+        ref_={a} lang={lang}
+        player={sides ? playerNames[sides.playerA] : ''}
+        playerIdx={sides ? sides.playerA : null}
+      />
       <div className="tm-card-vs"><span>{s.tour.vs}</span></div>
-      <FighterSide ref_={b} lang={lang} player={sides ? playerNames[sides.playerB] : ''} />
+      <FighterSide
+        ref_={b} lang={lang}
+        player={sides ? playerNames[sides.playerB] : ''}
+        playerIdx={sides ? sides.playerB : null}
+      />
 
       {m.map && (
         <div className="tm-card-map">
@@ -262,7 +426,9 @@ function MatchCard({
   );
 }
 
-function FighterSide({ ref_, lang, player }: { ref_: FighterRef; lang: Lang; player: string }) {
+function FighterSide({
+  ref_, lang, player, playerIdx,
+}: { ref_: FighterRef; lang: Lang; player: string; playerIdx: 0 | 1 | null }) {
   const s = t(lang);
   const img = getMiniImage(ref_.setId, ref_.idx);
   return (
@@ -272,7 +438,7 @@ function FighterSide({ ref_, lang, player }: { ref_: FighterRef; lang: Lang; pla
       </div>
       <div className="tm-side-body">
         {player && (
-          <div className="tm-side-player">
+          <div className={`tm-side-player p${playerIdx}`}>
             <b>{player}</b> <span>{s.tour.plays}</span>
           </div>
         )}
@@ -286,56 +452,14 @@ function FighterSide({ ref_, lang, player }: { ref_: FighterRef; lang: Lang; pla
   );
 }
 
-// ── Bracket row (compact) ────────────────────────────────────────────────────
-
-function BracketRow({
-  m, t: tour, lang, playerNames, onUndo, undoLabel,
-}: {
-  m: TMatch;
-  t: Tournament;
-  lang: Lang;
-  playerNames: [string, string];
-  onUndo: (id: string) => void;
-  undoLabel: string;
-}) {
-  const s = t(lang);
-  const a = resolveSlot(tour, m.a);
-  const b = resolveSlot(tour, m.b);
-  const sides = sidesOf(m);
-
-  const title = m.map
-    ? `${mapName(m.map, lang)}${sides ? ` · ${playerNames[sides.playerA]} / ${playerNames[sides.playerB]}` : ''}`
-    : undefined;
-
-  const nameOf = (r: FighterRef | null) => (r ? fighterName(r, lang) : s.tour.tbd);
-
-  const decided = m.winner !== null;
-  const Row = decided ? 'button' : 'div';
-
-  return (
-    <Row
-      className={`tm-mini${decided ? ' decided' : ''}`}
-      title={title}
-      {...(decided
-        ? { type: 'button' as const, onClick: () => onUndo(m.id), 'aria-label': undoLabel }
-        : {})}
-    >
-      <span className={`tm-mini-side${m.winner === 'a' ? ' won' : m.winner === 'b' ? ' lost' : ''}`}>
-        {nameOf(a)}
-      </span>
-      <span className={`tm-mini-side${m.winner === 'b' ? ' won' : m.winner === 'a' ? ' lost' : ''}`}>
-        {nameOf(b)}
-      </span>
-    </Row>
-  );
-}
-
 // ── Editable player name ─────────────────────────────────────────────────────
 
-function EditableName({ name, onRename }: { name: string; onRename: (v: string) => void }) {
+function EditableName({
+  name, player, onRename,
+}: { name: string; player: 0 | 1; onRename: (v: string) => void }) {
   return (
     <span
-      className="tm-score-name"
+      className={`tm-score-name p${player}`}
       contentEditable
       suppressContentEditableWarning
       spellCheck={false}

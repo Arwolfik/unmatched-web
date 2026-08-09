@@ -55,6 +55,9 @@
   --accent-active: var(--ochre-700);
   --accent-tint:  rgba(181, 138, 46, 0.10);
   --on-accent:    #fbfaf6;
+  /* Second player in head-to-head views — must read as "not ochre" */
+  --player-b:      #3d6680;
+  --player-b-tint: rgba(61, 102, 128, 0.12);
 
   /* Typography */
   --font-display: 'Spectral', Georgia, 'Times New Roman', serif;
@@ -95,6 +98,8 @@
   --accent-active: #b58a2e;
   --accent-tint:  rgba(209, 164, 64, 0.10);
   --on-accent:    #161616;
+  --player-b:      #7ba4c4;
+  --player-b-tint: rgba(123, 164, 196, 0.12);
 }
 
 /* ============================================================
@@ -1238,21 +1243,23 @@ main {
   font-family: var(--font-display);
 }
 .tm-score-name {
-  font-size: 14px; color: var(--text-2);
+  font-size: 14px;
   border-bottom: 1px dashed var(--border);
   cursor: text;
   padding-bottom: 1px;
 }
+.tm-score-name.p0 { color: var(--accent); }
+.tm-score-name.p1 { color: var(--player-b); }
 .tm-score-name:focus {
   outline: none;
-  border-bottom-color: var(--accent);
-  color: var(--text);
+  border-bottom-color: currentColor;
 }
 .tm-score-nums {
   font-size: 22px; font-weight: 600;
-  color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
+.tm-score-nums .p0 { color: var(--accent); }
+.tm-score-nums .p1 { color: var(--player-b); }
 .tm-score-sep { opacity: 0.4; margin: 0 3px; }
 .tm-restart { flex-shrink: 0; }
 
@@ -1347,9 +1354,10 @@ main {
   font-family: var(--font-mono);
   font-size: 9px; letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent);
   margin-bottom: 3px;
 }
+.tm-side-player.p0 { color: var(--accent); }
+.tm-side-player.p1 { color: var(--player-b); }
 .tm-side-player span { color: var(--text-3); }
 .tm-side-name {
   font-family: var(--font-display);
@@ -1416,49 +1424,97 @@ main {
 }
 .tm-win-btn:hover { background: var(--accent-tint); color: var(--accent); font-weight: 600; }
 
-/* Bracket */
-.tm-bracket {
-  display: flex; gap: 16px;
+/* Bracket tree — sports style with connector lines */
+.tm-tree-scroll {
   overflow-x: auto;
-  padding-bottom: 12px;
+  padding-bottom: 16px;
 }
-.tm-col {
-  flex: 0 0 auto;
-  width: 190px;
-  display: flex; flex-direction: column; gap: 6px;
+.tm-tree { position: relative; }
+
+.tm-tree-links {
+  position: absolute; inset: 0;
+  pointer-events: none;
 }
-.tm-col-head {
-  display: flex; align-items: center; justify-content: space-between;
+.tm-link {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+.tm-link.live { stroke: var(--accent); }
+
+.tm-tree-head {
+  position: absolute; top: 0;
   font-family: var(--font-mono);
   font-size: 10px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--accent);
+  display: flex; align-items: center; justify-content: space-between;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 2px;
 }
-.tm-col-count { color: var(--text-3); font-weight: 400; }
-.tm-mini {
+.tm-tree-head-n { color: var(--text-3); font-weight: 400; }
+
+.tm-tree-box {
+  position: absolute;
   display: flex; flex-direction: column;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   background: var(--surface);
-  width: 100%; text-align: left;
+  text-align: left;
   font: inherit;
+  padding: 0;
+  overflow: hidden;
+  z-index: 1;
 }
-.tm-mini.decided { cursor: pointer; }
-.tm-mini.decided:hover { border-color: var(--accent); }
-.tm-mini-side {
+.tm-tree-box.pending { border-style: dashed; border-color: var(--border); }
+.tm-tree-box.decided { cursor: pointer; }
+.tm-tree-box.decided:hover { border-color: var(--accent); }
+
+.tm-tree-row {
+  flex: 1;
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 8px;
+  min-width: 0;
   font-family: var(--font-display);
-  font-size: 12px; color: var(--text-2);
-  padding: 6px 9px;
+  font-size: 12px;
+  color: var(--text-2);
+  border-left: 3px solid transparent;
+}
+.tm-tree-row + .tm-tree-row { border-top: 1px solid var(--border); }
+.tm-tree-name {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.tm-mini-side + .tm-mini-side { border-top: 1px solid var(--border); }
-.tm-mini-side.won {
+/* Player marker — colour carries the identity, the letter is a hint.
+   Two players can share a first initial (Артём / Аня), so never rely on it. */
+.tm-tree-who {
+  flex-shrink: 0;
+  width: 14px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 8px; font-weight: 700;
+  border: 1px solid;
+}
+.tm-tree-who.p0 {
+  background: var(--accent-tint);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tm-tree-who.p1 {
+  background: var(--player-b-tint);
+  border-color: var(--player-b);
+  color: var(--player-b);
+}
+.tm-tree-row.won {
   color: var(--text); font-weight: 600;
   background: var(--accent-tint);
+  border-left-color: var(--accent);
 }
-.tm-mini-side.lost { color: var(--text-disabled); text-decoration: line-through; }
+.tm-tree-row.won:has(.tm-tree-who.p1) {
+  background: var(--player-b-tint);
+  border-left-color: var(--player-b);
+}
+.tm-tree-row.lost { color: var(--text-disabled); }
+.tm-tree-row.lost .tm-tree-name { text-decoration: line-through; }
 
 @media (max-width: 600px) {
   .view-tabs-inner { padding: 0 16px; }
@@ -1468,7 +1524,6 @@ main {
   .tm-cards { grid-template-columns: 1fr; }
   .tm-setup { padding: 56px 20px; }
   .tm-champion { flex-direction: column; text-align: center; gap: 14px; }
-  .tm-col { width: 160px; }
 }
 
 /* ============================================================
