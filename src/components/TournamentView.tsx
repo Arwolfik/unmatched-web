@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { getMapImage, getMiniImage } from '../data/box-images';
 import { t } from '../lib/i18n';
 import {
-  champion,
+  feedsFrom,
   fighterName,
   mapName,
+  matchKey,
   playedCount,
   playerScores,
+  podium,
   resolveSlot,
   roundKey,
   setCode,
@@ -14,7 +16,9 @@ import {
   sidesOf,
   upcomingMatches,
 } from '../lib/tournament';
-import type { ActionLabel, FighterRef, TMatch, Tournament } from '../lib/tournament';
+import type {
+  ActionLabel, FighterRef, Placement, TMatch, Tournament,
+} from '../lib/tournament';
 import type { Lang } from '../types';
 
 interface Props {
@@ -96,16 +100,17 @@ export function TournamentView(props: Props) {
   const played = playedCount(tournament);
   const total = tournament.matches.length;
   const scores = playerScores(tournament);
-  const champ = champion(tournament);
+  const places = podium(tournament);
   const upcoming = upcomingMatches(tournament);
   const visible = showAllUpcoming ? upcoming : upcoming.slice(0, UPCOMING_PREVIEW);
 
-  const label = (round: number) => {
-    const key = roundKey(tournament, round);
-    if (key === 'qualifier') return s.tour.roundQualifier;
-    if (key === 'final') return s.tour.roundFinal;
-    return key;
-  };
+  const nameOf = (key: string) =>
+    key === 'qualifier' ? s.tour.roundQualifier
+      : key === 'final' ? s.tour.roundFinal
+        : key === 'third' ? s.tour.roundThird
+          : key;
+  const roundLabel = (round: number) => nameOf(roundKey(tournament, round));
+  const matchLabel = (m: TMatch) => nameOf(matchKey(tournament, m));
 
   return (
     <section className="tm" aria-label={s.tour.title}>
@@ -148,20 +153,9 @@ export function TournamentView(props: Props) {
 
       <p className="tm-safety">{s.tour.safetyNote}</p>
 
-      {/* ── Champion ─────────────────────────────────────────────── */}
-      {champ && (
-        <div className="tm-champion">
-          {getMiniImage(champ.setId, champ.idx) && (
-            <div className="tm-champion-img">
-              <img src={getMiniImage(champ.setId, champ.idx)} alt="" loading="lazy" />
-            </div>
-          )}
-          <div className="tm-champion-body">
-            <div className="tm-champion-label">🏆 {s.tour.championIs}</div>
-            <div className="tm-champion-name">{fighterName(champ, lang)}</div>
-            <div className="tm-champion-set">{setName(champ.setId, lang)}</div>
-          </div>
-        </div>
+      {/* ── Podium ───────────────────────────────────────────────── */}
+      {places.first && (
+        <Podium places={places} lang={lang} playerNames={playerNames} />
       )}
 
       {/* ── Up next ──────────────────────────────────────────────── */}
@@ -179,7 +173,7 @@ export function TournamentView(props: Props) {
                   t={tournament}
                   lang={lang}
                   playerNames={playerNames}
-                  roundLabel={label(m.round)}
+                  roundLabel={matchLabel(m)}
                   onWin={props.onWin}
                 />
               ))}
@@ -206,10 +200,57 @@ export function TournamentView(props: Props) {
           t={tournament}
           lang={lang}
           playerNames={playerNames}
-          label={label}
+          label={roundLabel}
           onUndo={props.onUndo}
         />
       </div>
+    </section>
+  );
+}
+
+// ── Podium ───────────────────────────────────────────────────────────────────
+
+const MEDALS = ['', '🥇', '🥈', '🥉'];
+
+function Podium({
+  places, lang, playerNames,
+}: {
+  places: { first: Placement | null; second: Placement | null; third: Placement | null };
+  lang: Lang;
+  playerNames: [string, string];
+}) {
+  const s = t(lang);
+  const slots: [number, Placement | null][] = [
+    [1, places.first], [2, places.second], [3, places.third],
+  ];
+
+  return (
+    <section className="tm-podium" aria-label={s.tour.podiumTitle}>
+      <h2 className="tm-podium-title">{s.tour.podiumTitle}</h2>
+      <ol className="tm-podium-row">
+        {slots.map(([place, p]) => p && (
+          <li key={place} className={`tm-podium-slot place${place}`}>
+            <div className="tm-podium-card">
+              <div className="tm-podium-medal">{MEDALS[place]}</div>
+              <div className="tm-podium-img">
+                {getMiniImage(p.fighter.setId, p.fighter.idx)
+                  ? <img src={getMiniImage(p.fighter.setId, p.fighter.idx)} alt="" loading="lazy" />
+                  : <span className="tm-podium-code">{setCode(p.fighter.setId)}</span>}
+              </div>
+              <div className="tm-podium-name">{fighterName(p.fighter, lang)}</div>
+              <div className="tm-podium-set">{setName(p.fighter.setId, lang)}</div>
+              {p.player !== null && playerNames[p.player] && (
+                <div className={`tm-podium-player p${p.player}`}>
+                  {s.tour.playedBy(playerNames[p.player])}
+                </div>
+              )}
+            </div>
+            <div className="tm-podium-plinth">
+              <span className="tm-podium-place">{s.tour.place(place)}</span>
+            </div>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }
@@ -221,6 +262,7 @@ const BOX_H = 52;
 const PITCH = 66;   // vertical distance between adjacent round-1 matches
 const COL_GAP = 54;
 const HEADER_H = 32;
+const THIRD_GAP = 40;   // room for the "third place" caption under the tree
 
 function BracketTree({
   t: tour, lang, playerNames, label, onUndo,
@@ -233,8 +275,14 @@ function BracketTree({
 }) {
   const s = t(lang);
 
+  // The bronze match shares the final's round but sits outside the tree, so it
+  // is kept out of byRound — the pairing recursion below assumes 2^n per round.
+  const third = tour.matches.find((m) => m.thirdPlace);
   const byRound: Record<number, TMatch[]> = {};
-  for (const m of tour.matches) (byRound[m.round] ??= []).push(m);
+  for (const m of tour.matches) {
+    if (m.thirdPlace) continue;
+    (byRound[m.round] ??= []).push(m);
+  }
 
   // Vertical placement: round 1 is evenly spaced; every later match sits
   // centred between the two matches that feed it.
@@ -250,11 +298,7 @@ function BracketTree({
   // Qualifiers sit level with the round-1 match they feed into.
   if (byRound[0]) {
     for (const q of byRound[0]) {
-      const target = byRound[1].find(
-        (m) =>
-          (m.a.kind === 'winnerOf' && m.a.matchId === q.id) ||
-          (m.b.kind === 'winnerOf' && m.b.matchId === q.id),
-      );
+      const target = byRound[1].find((m) => feedsFrom(m, q.id));
       y[q.id] = target ? y[target.id] : 0;
     }
   }
@@ -263,13 +307,18 @@ function BracketTree({
   const colX = (round: number) => (hasQ ? round : round - 1) * (BOX_W + COL_GAP);
   const columns = (hasQ ? 1 : 0) + tour.totalRounds;
   const width = columns * BOX_W + (columns - 1) * COL_GAP;
-  const height = byRound[1].length * PITCH + HEADER_H;
+
+  // Bronze hangs below the whole tree, in the final's column.
+  const treeBottom = (byRound[1].length - 1) * PITCH + BOX_H;
+  if (third) y[third.id] = treeBottom + THIRD_GAP;
+  const height =
+    HEADER_H + (third ? y[third.id] + BOX_H : byRound[1].length * PITCH);
 
   // Elbow connectors from each feeder to the match it advances into.
-  const links: { d: string; live: boolean }[] = [];
+  const links: { d: string; live: boolean; third: boolean }[] = [];
   for (const m of tour.matches) {
     for (const slot of [m.a, m.b]) {
-      if (slot.kind !== 'winnerOf') continue;
+      if (slot.kind === 'fighter') continue;
       const feeder = tour.matches.find((f) => f.id === slot.matchId);
       if (!feeder) continue;
       const fx = colX(feeder.round) + BOX_W;
@@ -280,6 +329,7 @@ function BracketTree({
       links.push({
         d: `M ${fx} ${fy} H ${midX} V ${py} H ${px}`,
         live: feeder.winner !== null,
+        third: Boolean(m.thirdPlace),
       });
     }
   }
@@ -291,7 +341,11 @@ function BracketTree({
       <div className="tm-tree" style={{ width, height }}>
         <svg className="tm-tree-links" width={width} height={height} aria-hidden="true">
           {links.map((l, i) => (
-            <path key={i} d={l.d} className={l.live ? 'tm-link live' : 'tm-link'} />
+            <path
+              key={i}
+              d={l.d}
+              className={`tm-link${l.live ? ' live' : ''}${l.third ? ' third' : ''}`}
+            />
           ))}
         </svg>
 
@@ -306,6 +360,15 @@ function BracketTree({
           </div>
         ))}
 
+        {third && (
+          <div
+            className="tm-tree-head third"
+            style={{ left: colX(third.round), top: HEADER_H + y[third.id] - 22, width: BOX_W }}
+          >
+            {s.tour.roundThird}
+          </div>
+        )}
+
         {tour.matches.map((m) => (
           <TreeBox
             key={m.id}
@@ -315,6 +378,7 @@ function BracketTree({
             playerNames={playerNames}
             x={colX(m.round)}
             y={y[m.id] + HEADER_H}
+            third={Boolean(m.thirdPlace)}
             onUndo={onUndo}
             undoLabel={s.tour.undo}
             tbd={s.tour.tbd}
@@ -326,7 +390,7 @@ function BracketTree({
 }
 
 function TreeBox({
-  m, t: tour, lang, playerNames, x, y, onUndo, undoLabel, tbd,
+  m, t: tour, lang, playerNames, x, y, third, onUndo, undoLabel, tbd,
 }: {
   m: TMatch;
   t: Tournament;
@@ -334,6 +398,7 @@ function TreeBox({
   playerNames: [string, string];
   x: number;
   y: number;
+  third: boolean;
   onUndo: (id: string) => void;
   undoLabel: string;
   tbd: string;
@@ -368,7 +433,7 @@ function TreeBox({
   };
 
   const common = {
-    className: `tm-tree-box${decided ? ' decided' : ''}${!a || !b ? ' pending' : ''}`,
+    className: `tm-tree-box${decided ? ' decided' : ''}${!a || !b ? ' pending' : ''}${third ? ' third' : ''}`,
     style: { left: x, top: y, width: BOX_W, height: BOX_H },
     title: tip || undefined,
   };

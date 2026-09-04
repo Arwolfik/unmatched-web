@@ -23,7 +23,9 @@ export interface MapRef { setId: string; idx: number }
 
 export type SlotRef =
   | { kind: 'fighter'; ref: FighterRef }
-  | { kind: 'winnerOf'; matchId: string };
+  | { kind: 'winnerOf'; matchId: string }
+  /** Feeds the third-place match from a semi-final's loser. */
+  | { kind: 'loserOf'; matchId: string };
 
 export interface TMatch {
   id: string;
@@ -37,6 +39,8 @@ export interface TMatch {
   sideA: 0 | 1 | null;
   winner: 'a' | 'b' | null;
   playedAt: number | null;
+  /** The bronze match. Lives in the final's column but outside the main tree. */
+  thirdPlace?: boolean;
 }
 
 export interface Tournament {
@@ -267,7 +271,7 @@ export function createTournament(
 
   // Seed map + sides for everything already playable
   for (const m of tournament.matches) prepareIfReady(tournament, m);
-  return { ok: true, tournament };
+  return { ok: true, tournament: ensureThirdPlace(tournament) };
 }
 
 // ── Resolution & progression ─────────────────────────────────────────────────
@@ -281,7 +285,16 @@ export function resolveSlot(t: Tournament, slot: SlotRef): FighterRef | null {
   if (slot.kind === 'fighter') return slot.ref;
   const src = getMatch(t, slot.matchId);
   if (!src || !src.winner) return null;
-  return resolveSlot(t, src.winner === 'a' ? src.a : src.b);
+  const wantWinner = slot.kind === 'winnerOf';
+  const takeA = wantWinner ? src.winner === 'a' : src.winner === 'b';
+  return resolveSlot(t, takeA ? src.a : src.b);
+}
+
+/** Does `d` take either of its fighters from match `id`? */
+export function feedsFrom(d: TMatch, id: string): boolean {
+  const from = (s: SlotRef) =>
+    (s.kind === 'winnerOf' || s.kind === 'loserOf') && s.matchId === id;
+  return from(d.a) || from(d.b);
 }
 
 export function isReady(t: Tournament, m: TMatch): boolean {
@@ -375,10 +388,7 @@ export function dependentDecidedCount(t: Tournament, matchId: string): number {
   let n = 0;
   const walk = (id: string) => {
     for (const d of t.matches) {
-      const feeds =
-        (d.a.kind === 'winnerOf' && d.a.matchId === id) ||
-        (d.b.kind === 'winnerOf' && d.b.matchId === id);
-      if (feeds && d.winner) { n++; walk(d.id); }
+      if (feedsFrom(d, id) && d.winner) { n++; walk(d.id); }
     }
   };
   walk(matchId);
@@ -396,10 +406,7 @@ export function clearWinner(t: Tournament, matchId: string): Tournament {
     m.winner = null;
     m.playedAt = null;
     for (const d of next.matches) {
-      const feeds =
-        (d.a.kind === 'winnerOf' && d.a.matchId === id) ||
-        (d.b.kind === 'winnerOf' && d.b.matchId === id);
-      if (!feeds) continue;
+      if (!feedsFrom(d, id)) continue;
       d.map = null;
       d.sideA = null;
       if (d.winner) reset(d.id);
@@ -422,19 +429,95 @@ export function matchesByRound(t: Tournament): TMatch[][] {
 
 /** Playable right now: both fighters known, no result yet. */
 export function upcomingMatches(t: Tournament): TMatch[] {
+  const order = (m: TMatch) => (m.thirdPlace ? 0 : 1);  // bronze is played before the final
   return t.matches
     .filter((m) => !m.winner && isReady(t, m))
-    .sort((x, y) => x.round - y.round || x.idx - y.idx);
+    .sort((x, y) => x.round - y.round || order(x) - order(y) || x.idx - y.idx);
 }
 
 export function playedCount(t: Tournament): number {
   return t.matches.filter((m) => m.winner).length;
 }
 
+/** The gold-medal match — explicitly, never "the last one in the array". */
+export function finalMatch(t: Tournament): TMatch | undefined {
+  return t.matches.find((m) => m.round === t.totalRounds && !m.thirdPlace);
+}
+
+export function thirdPlaceMatch(t: Tournament): TMatch | undefined {
+  return t.matches.find((m) => m.thirdPlace);
+}
+
 export function champion(t: Tournament): FighterRef | null {
-  const final = t.matches[t.matches.length - 1];
+  const final = finalMatch(t);
   if (!final?.winner) return null;
   return resolveSlot(t, final.winner === 'a' ? final.a : final.b);
+}
+
+export interface Placement {
+  fighter: FighterRef;
+  /** Who played them in the deciding match. */
+  player: 0 | 1 | null;
+}
+
+function placementsOf(t: Tournament, m: TMatch | undefined) {
+  if (!m?.winner) return { won: null, lost: null };
+  const wonSlot = m.winner === 'a' ? m.a : m.b;
+  const lostSlot = m.winner === 'a' ? m.b : m.a;
+  const wonFighter = resolveSlot(t, wonSlot);
+  const lostFighter = resolveSlot(t, lostSlot);
+  const wonPlayer = m.sideA === null ? null
+    : ((m.winner === 'a' ? m.sideA : 1 - m.sideA) as 0 | 1);
+  const lostPlayer = wonPlayer === null ? null : ((1 - wonPlayer) as 0 | 1);
+  return {
+    won: wonFighter ? { fighter: wonFighter, player: wonPlayer } : null,
+    lost: lostFighter ? { fighter: lostFighter, player: lostPlayer } : null,
+  };
+}
+
+/** Gold / silver from the final, bronze from the third-place match. */
+export function podium(t: Tournament): {
+  first: Placement | null;
+  second: Placement | null;
+  third: Placement | null;
+} {
+  const f = placementsOf(t, finalMatch(t));
+  const b = placementsOf(t, thirdPlaceMatch(t));
+  return { first: f.won, second: f.lost, third: b.won };
+}
+
+/**
+ * Adds the third-place match to a tournament drawn before the feature existed.
+ * Idempotent, and deliberately additive — it never touches an existing match's
+ * winner, map or sides, so an in-progress bracket survives untouched.
+ */
+export function ensureThirdPlace(t: Tournament): Tournament {
+  if (t.totalRounds < 2) return t;                    // no semi-finals to lose
+  if (t.matches.some((m) => m.thirdPlace)) return t;  // already migrated
+  const semis = t.matches.filter(
+    (m) => m.round === t.totalRounds - 1 && !m.thirdPlace,
+  );
+  if (semis.length !== 2) return t;
+
+  const next: Tournament = {
+    ...t,
+    matches: [
+      ...t.matches.map((m) => ({ ...m })),
+      {
+        id: 'third',
+        round: t.totalRounds,
+        idx: 1,
+        thirdPlace: true,
+        a: { kind: 'loserOf', matchId: semis[0].id },
+        b: { kind: 'loserOf', matchId: semis[1].id },
+        map: null, sideA: null, winner: null, playedAt: null,
+      },
+    ],
+  };
+  // Only the new match can actually change here: prepareIfReady bails out early
+  // on anything that already has a map and sides.
+  for (const m of next.matches) prepareIfReady(next, m);
+  return next;
 }
 
 /** Match wins per human player. */
@@ -459,4 +542,9 @@ export function roundKey(t: Tournament, round: number): 'qualifier' | 'final' | 
   if (round === 0) return 'qualifier';
   const count = 2 ** (t.totalRounds - round);
   return count === 1 ? 'final' : `1/${count}`;
+}
+
+/** Same, but the bronze match shares the final's round and needs its own label. */
+export function matchKey(t: Tournament, m: TMatch): string {
+  return m.thirdPlace ? 'third' : roundKey(t, m.round);
 }

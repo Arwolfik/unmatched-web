@@ -13,6 +13,7 @@ import {
   clearWinner,
   createTournament,
   dependentDecidedCount,
+  ensureThirdPlace,
   getMatch,
   resolveSlot,
   setWinner,
@@ -74,10 +75,15 @@ export default function App() {
   // present/past/future live in one object so an action and its undo entry can
   // never drift apart — two clicks in the same tick would otherwise both read a
   // stale `tournament` and silently drop one of the results.
-  const [tourHist, setTourHist] = useState<TourHistory>({
-    present: persisted.tournament ?? null,
-    past: persisted.tournamentPast ?? [],
-    future: persisted.tournamentFuture ?? [],
+  // Tournaments drawn before the third-place match existed get it added on
+  // load — including every undo snapshot, so stepping back doesn't lose it.
+  const [tourHist, setTourHist] = useState<TourHistory>(() => {
+    const migrate = (x: Tournament | null) => (x ? ensureThirdPlace(x) : x);
+    return {
+      present: migrate(persisted.tournament ?? null),
+      past: (persisted.tournamentPast ?? []).map((s) => ({ ...s, state: migrate(s.state) })),
+      future: (persisted.tournamentFuture ?? []).map((s) => ({ ...s, state: migrate(s.state) })),
+    };
   });
   const tournament = tourHist.present;
   const tourPast = tourHist.past;

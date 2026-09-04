@@ -75,11 +75,14 @@ interface Strings {
     bracket: string;
     roundQualifier: string;
     roundFinal: string;
+    roundThird: string;
+    podiumTitle: string;
+    place: (n: number) => string;
+    playedBy: (name: string) => string;
     plays: string;
     wins: string;
     undo: string;
     champion: string;
-    championIs: string;
     vs: string;
     tbd: string;
     scoreboard: string;
@@ -186,11 +189,14 @@ const en: Strings = {
     bracket: 'Bracket',
     roundQualifier: 'Qualifier',
     roundFinal: 'Final',
+    roundThird: 'Third place',
+    podiumTitle: 'Final standings',
+    place: (n) => ['', '1st', '2nd', '3rd'][n] ?? `${n}th`,
+    playedBy: (name) => `played by ${name}`,
     plays: 'plays',
     wins: 'Won',
     undo: 'Undo',
     champion: 'Champion',
-    championIs: 'Champion',
     vs: 'vs',
     tbd: 'TBD',
     scoreboard: 'Head to head',
@@ -307,11 +313,14 @@ const ru: Strings = {
     bracket: 'Сетка',
     roundQualifier: 'Квалификация',
     roundFinal: 'Финал',
+    roundThird: 'За третье место',
+    podiumTitle: 'Итоги турнира',
+    place: (n) => `${n}-е место`,
+    playedBy: (name) => `игрок: ${name}`,
     plays: 'играет за',
     wins: 'Победа',
     undo: 'Отменить',
     champion: 'Чемпион',
-    championIs: 'Чемпион',
     vs: 'против',
     tbd: 'Ждём',
     scoreboard: 'Личный счёт',
