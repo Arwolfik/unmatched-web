@@ -48,18 +48,28 @@ if (topOpens / total > 0.6 || topOpens / total < 0.4) throw new Error('first tur
 // ── 2. Backfilling an old tournament keeps the record true ──────────────────
 for (let run = 0; run < 100; run++) {
   const base = playOut(fresh(), Math.floor(Math.random() * 34));
-  // strip first turns, as a tournament drawn before the feature would look
-  const legacy: Tournament = { ...base, matches: base.matches.map((m) => ({ ...m, firstSide: null })) };
+  // A tournament saved before the feature has no firstSide key at all. Half the
+  // runs drop the key and half set it to null — an early version of this check
+  // only did the latter, and the missing-key case shipped broken because of it.
+  const dropKey = run % 2 === 0;
+  const legacy: Tournament = {
+    ...base,
+    matches: base.matches.map((m) => {
+      if (!dropKey) return { ...m, firstSide: null };
+      const { firstSide: _drop, ...rest } = m;
+      return rest as typeof m;
+    }),
+  };
   const before = new Map(legacy.matches.map((m) => [m.id, JSON.stringify(m)]));
   const after = ensureFirstSide(legacy);
 
   for (const m of after.matches) {
     const was = JSON.parse(before.get(m.id)!) as TMatch;
     const { firstSide, ...restNow } = m;
-    const { firstSide: _was, ...restBefore } = was;
+    const { firstSide: _was, ...restBefore } = was as typeof m;
     if (JSON.stringify(restNow) !== JSON.stringify(restBefore)) throw new Error(`${m.id} changed beyond firstSide`);
     if (was.winner !== null && firstSide !== 'a') throw new Error(`played ${m.id} not recorded as top-opens`);
-    if (was.sideA !== null && firstSide === null) throw new Error(`${m.id} left without a first turn`);
+    if (was.sideA !== null && firstSide == null) throw new Error(`${m.id} left without a first turn (dropKey=${dropKey})`);
   }
   if (playerScores(after).join(':') !== playerScores(legacy).join(':')) throw new Error('score drifted');
   if (ensureFirstSide(after) !== after) throw new Error('not idempotent');

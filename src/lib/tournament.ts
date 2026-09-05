@@ -334,7 +334,7 @@ function playCounts(t: Tournament, skipId: string): Map<string, number> {
 function firstCounts(t: Tournament, skipId: string): [number, number] {
   const out: [number, number] = [0, 0];
   for (const o of t.matches) {
-    if (o.id === skipId || o.sideA === null || o.firstSide === null) continue;
+    if (o.id === skipId || o.sideA === null || o.firstSide == null) continue;
     out[o.firstSide === 'a' ? o.sideA : 1 - o.sideA]++;
   }
   return out;
@@ -342,7 +342,9 @@ function firstCounts(t: Tournament, skipId: string): [number, number] {
 
 /** Assign a map (from neither fighter's box, least-used first), sides and first turn. */
 function prepareIfReady(t: Tournament, m: TMatch): void {
-  if (m.map && m.sideA !== null && m.firstSide !== null) return;
+  // `== null` throughout: a match stored before firstSide existed has no such
+  // key, and undefined has to read as "not set yet" exactly like null does.
+  if (m.map && m.sideA !== null && m.firstSide != null) return;
   const a = resolveSlot(t, m.a);
   const b = resolveSlot(t, m.b);
   if (!a || !b) return;
@@ -363,7 +365,7 @@ function prepareIfReady(t: Tournament, m: TMatch): void {
       : Math.random() < 0.5 ? 0 : 1;
   }
 
-  if (m.firstSide === null) {
+  if (m.firstSide == null) {
     // Going first is a real edge in Unmatched, so it is shared out evenly
     // between the two humans rather than always falling to the top of the
     // bracket. Ties break randomly, which keeps the order unpredictable while
@@ -559,7 +561,7 @@ export function ensureThirdPlace(t: Tournament): Tournament {
 
 /** Which player takes the first turn, or null until the match is drawn. */
 export function firstPlayer(m: TMatch): 0 | 1 | null {
-  if (m.sideA === null || m.firstSide === null) return null;
+  if (m.sideA === null || m.firstSide == null) return null;
   return (m.firstSide === 'a' ? m.sideA : 1 - m.sideA) as 0 | 1;
 }
 
@@ -596,10 +598,13 @@ export function setMatchFirst(t: Tournament, matchId: string, side: 'a' | 'b'): 
  * Everything still unplayed is drawn fresh by the balanced rule.
  */
 export function ensureFirstSide(t: Tournament): Tournament {
-  if (t.matches.every((m) => m.firstSide !== null || m.sideA === null)) return t;
+  const unset = (m: TMatch) => m.firstSide == null;
+  if (t.matches.every((m) => !unset(m) || m.sideA === null)) return t;
   const next = clone(t);
   for (const m of next.matches) {
-    if (m.firstSide === null && m.winner !== null) m.firstSide = 'a';
+    if (!unset(m)) continue;
+    // Normalise the missing key to null so prepareIfReady will fill it in.
+    m.firstSide = m.winner !== null ? 'a' : null;
   }
   for (const m of next.matches) prepareIfReady(next, m);
   return next;
