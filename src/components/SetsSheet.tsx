@@ -63,7 +63,7 @@ export function SetsSheet({
             </svg>
           </button>
         </header>
-        <div className="sheet-body sheet-body-padded">
+        <div className="sheet-body">
           <SetsGrid
             lang={lang}
             selected={selected}

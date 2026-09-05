@@ -88,6 +88,8 @@ export function MatchEditor({
               </button>
             </div>
 
+            <div className="me-colhead">{s.tour.editFirstLabel}</div>
+
             {rows.map((r) => (
               <div key={r.side} className={`me-row${m.winner === r.side ? ' won' : ''}`}>
                 <div className="me-row-img">
@@ -111,7 +113,6 @@ export function MatchEditor({
                 </button>
               </div>
             ))}
-            <div className="me-hint">{s.tour.editFirstLabel}</div>
           </div>
 
           {/* Map */}

@@ -1002,7 +1002,6 @@ main {
   width: min(960px, calc(100vw - 32px));
   max-height: min(80vh, calc(100vh - 64px));
 }
-.sheet-body-padded { padding: 20px; }
 .sheet-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 20px;
@@ -1017,6 +1016,8 @@ main {
   flex: 1; overflow-y: auto;
   padding: 0;
 }
+/* Must come after .sheet-body — same specificity, so order decides. */
+.sheet-body-padded { padding: 20px; }
 .sheet-foot {
   padding: 12px 20px;
   border-top: 1px solid var(--border);
@@ -1541,11 +1542,11 @@ main {
 .me-first.on {
   background: var(--accent); border-color: var(--accent); color: var(--on-accent);
 }
-.me-hint {
+.me-colhead {
   font-family: var(--font-mono);
-  font-size: 10px; letter-spacing: 0.06em;
+  font-size: 9px; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--text-3);
-  margin-top: 8px; text-align: right;
+  text-align: right; margin-bottom: 5px;
 }
 
 .me-map-current {
