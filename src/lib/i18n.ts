@@ -48,6 +48,60 @@ interface Strings {
   themeLight: string;
   themeDark: string;
   // tournament
+  stats: {
+    nav: string;
+    navArchive: string;
+    title: string;
+    subtitle: (tournaments: number, matches: number) => string;
+    empty: string;
+    emptySub: string;
+    headToHead: string;
+    tileTournaments: string;
+    tileFinished: string;
+    tileMatches: string;
+    tileTitles: string;
+    tileFirstTurn: string;
+    firstTurnNote: (n: number) => string;
+    firstTurnUnknown: string;
+    fighters: string;
+    fightersNote: string;
+    boxes: string;
+    maps: string;
+    colPlayed: string;
+    colWon: string;
+    colRate: string;
+    showAll: (n: number) => string;
+    showLess: string;
+    data: string;
+    dataNote: string;
+    exportBtn: string;
+    importBtn: string;
+    importConfirm: (tournaments: number) => string;
+    importDone: (tournaments: number) => string;
+    importErrUnreadable: string;
+    importErrForeign: string;
+    importErrVersion: string;
+    // archive
+    archiveTitle: string;
+    archiveEmpty: string;
+    archiveEmptySub: string;
+    archiveCurrent: string;
+    archiveFileIt: string;
+    archiveFileConfirm: string;
+    archiveDelete: string;
+    archiveDeleteConfirm: string;
+    archiveUnfinished: string;
+    // results sheet
+    results: string;
+    resultsTitle: string;
+    resultsOf: (date: string) => string;
+    resultsPrint: string;
+    resultsClose: string;
+    colMatch: string;
+    colMap: string;
+    colFirst: string;
+    colWinner: string;
+  };
   tour: {
     nav: string;
     navRoll: string;
@@ -178,6 +232,58 @@ const en: Strings = {
     `Roll complete: ${fighters.join(', ')}${map ? ` on ${map}` : ''}.`,
   themeLight: 'Light theme',
   themeDark: 'Dark theme',
+  stats: {
+    nav: 'Stats',
+    navArchive: 'Archive',
+    title: 'Across every tournament',
+    subtitle: (t, m) => `${t} tournament${t === 1 ? '' : 's'} · ${m} matches played`,
+    empty: 'Nothing played yet',
+    emptySub: 'Run a tournament and the numbers show up here.',
+    headToHead: 'Head to head',
+    tileTournaments: 'Tournaments',
+    tileFinished: 'Finished',
+    tileMatches: 'Matches',
+    tileTitles: 'Titles',
+    tileFirstTurn: 'Won going first',
+    firstTurnNote: (n) => `over ${n} matches with a recorded first turn`,
+    firstTurnUnknown: 'No first-turn data yet',
+    fighters: 'Fighters',
+    fightersNote: 'Sorted by wins, then by matches played.',
+    boxes: 'Boxes',
+    maps: 'Maps',
+    colPlayed: 'Played',
+    colWon: 'Won',
+    colRate: 'Rate',
+    showAll: (n) => `Show all ${n}`,
+    showLess: 'Show less',
+    data: 'Your data',
+    dataNote: 'Everything lives in this browser only. Export a file to keep a copy or move it to another device.',
+    exportBtn: 'Export file',
+    importBtn: 'Import file',
+    importConfirm: (n) => `Replace what is here with this file? It holds ${n} tournament${n === 1 ? '' : 's'}. This can be undone only by importing your current export, so take one first if in doubt.`,
+    importDone: (n) => `Imported — ${n} tournament${n === 1 ? '' : 's'}.`,
+    importErrUnreadable: "That file isn't readable as a backup.",
+    importErrForeign: "That file isn't an Unmatched Picker export.",
+    importErrVersion: 'That export comes from a different version.',
+    archiveTitle: 'Archive',
+    archiveEmpty: 'Archive is empty',
+    archiveEmptySub: 'Finished tournaments land here when you start a new one.',
+    archiveCurrent: 'Current',
+    archiveFileIt: 'File it away',
+    archiveFileConfirm: 'Move this tournament into the archive? The bracket stays readable there, and the board clears for a new draw.',
+    archiveDelete: 'Delete',
+    archiveDeleteConfirm: 'Delete this tournament from the archive for good? Its matches drop out of the stats.',
+    archiveUnfinished: 'Unfinished',
+    results: 'Results sheet',
+    resultsTitle: 'Tournament results',
+    resultsOf: (d) => d,
+    resultsPrint: 'Print / save as PDF',
+    resultsClose: 'Close',
+    colMatch: 'Match',
+    colMap: 'Map',
+    colFirst: 'Opened',
+    colWinner: 'Winner',
+  },
   tour: {
     nav: 'Tournament',
     navRoll: 'Random roll',
@@ -188,7 +294,7 @@ const en: Strings = {
     setupQualifier: (n) => `${n} qualifier ${n === 1 ? 'match' : 'matches'} first — the field isn't a power of two`,
     start: 'Draw the bracket',
     restart: 'New tournament',
-    restartConfirm: 'Discard the current tournament and draw a new one?',
+    restartConfirm: 'Draw a new tournament? The current one moves to the archive first.',
     undoConfirm: (n) =>
       `This also clears ${n} later ${n === 1 ? 'match' : 'matches'} that followed from it. You can undo afterwards. Continue?`,
     undoBtn: 'Undo',
@@ -264,6 +370,15 @@ const en: Strings = {
   dayAgo: (n) => `${n}d ago`,
 };
 
+/** Russian count forms: 1 матч, 2 матча, 5 матчей. */
+function plural(n: number, one: string, few: string, many: string): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+  return many;
+}
+
 const ru: Strings = {
   appName: 'Unmatched Picker',
   yourSets: 'Ваши наборы',
@@ -318,6 +433,58 @@ const ru: Strings = {
     `Бросок: ${fighters.join(', ')}${map ? ` на ${map}` : ''}.`,
   themeLight: 'Светлая тема',
   themeDark: 'Тёмная тема',
+  stats: {
+    nav: 'Статистика',
+    navArchive: 'Архив',
+    title: 'За все турниры',
+    subtitle: (t, m) => `${t} ${plural(t, 'турнир', 'турнира', 'турниров')} · сыграно ${m} ${plural(m, 'матч', 'матча', 'матчей')}`,
+    empty: 'Пока ничего не сыграно',
+    emptySub: 'Проведи турнир — и здесь появятся цифры.',
+    headToHead: 'Личный счёт',
+    tileTournaments: 'Турниров',
+    tileFinished: 'Доиграно',
+    tileMatches: 'Матчей',
+    tileTitles: 'Титулов',
+    tileFirstTurn: 'Побед с первого хода',
+    firstTurnNote: (n) => `по ${n} матчам, где известен первый ход`,
+    firstTurnUnknown: 'Данных о первом ходе пока нет',
+    fighters: 'Бойцы',
+    fightersNote: 'Сортировка по победам, при равенстве — по числу матчей.',
+    boxes: 'Коробки',
+    maps: 'Карты',
+    colPlayed: 'Матчей',
+    colWon: 'Побед',
+    colRate: 'Винрейт',
+    showAll: (n) => `Показать все ${n}`,
+    showLess: 'Свернуть',
+    data: 'Твои данные',
+    dataNote: 'Всё хранится только в этом браузере. Выгрузи файл, чтобы иметь копию или перенести на другое устройство.',
+    exportBtn: 'Выгрузить файл',
+    importBtn: 'Загрузить файл',
+    importConfirm: (n) => `Заменить всё, что здесь есть, содержимым файла? В нём ${n} ${plural(n, 'турнир', 'турнира', 'турниров')}. Откатить это можно будет только импортом текущей выгрузки — если сомневаешься, сделай её сначала.`,
+    importDone: (n) => `Загружено — турниров: ${n}.`,
+    importErrUnreadable: 'Файл не читается как резервная копия.',
+    importErrForeign: 'Это не выгрузка Unmatched Picker.',
+    importErrVersion: 'Выгрузка из другой версии.',
+    archiveTitle: 'Архив',
+    archiveEmpty: 'В архиве пусто',
+    archiveEmptySub: 'Завершённые турниры попадут сюда, когда начнёшь новый.',
+    archiveCurrent: 'Текущий',
+    archiveFileIt: 'Убрать в архив',
+    archiveFileConfirm: 'Убрать этот турнир в архив? Сетка останется доступной там, а поле освободится под новую жеребьёвку.',
+    archiveDelete: 'Удалить',
+    archiveDeleteConfirm: 'Удалить турнир из архива насовсем? Его матчи выпадут из статистики.',
+    archiveUnfinished: 'Не доигран',
+    results: 'Красивые итоги',
+    resultsTitle: 'Итоги турнира',
+    resultsOf: (d) => d,
+    resultsPrint: 'Печать / сохранить PDF',
+    resultsClose: 'Закрыть',
+    colMatch: 'Матч',
+    colMap: 'Карта',
+    colFirst: 'Первый ход',
+    colWinner: 'Победа',
+  },
   tour: {
     nav: 'Турнир',
     navRoll: 'Случайный бросок',
@@ -326,12 +493,12 @@ const ru: Strings = {
     setupSub: (f, s, m) => `${f} бойцов из ${s} наборов · ${m} карт в ротации`,
     setupMatches: (n) => `${n} матчей, на вылет`,
     setupQualifier: (n) =>
-      `Сначала ${n} ${n === 1 ? 'матч' : n < 5 ? 'матча' : 'матчей'} квалификации — участников не степень двойки`,
+      `Сначала ${n} ${plural(n, 'матч', 'матча', 'матчей')} квалификации — участников не степень двойки`,
     start: 'Провести жеребьёвку',
     restart: 'Новый турнир',
-    restartConfirm: 'Удалить текущий турнир и провести новую жеребьёвку?',
+    restartConfirm: 'Провести новую жеребьёвку? Текущий турнир сначала уедет в архив.',
     undoConfirm: (n) =>
-      `Сбросит ещё ${n} ${n === 1 ? 'сыгранный матч' : n < 5 ? 'сыгранных матча' : 'сыгранных матчей'} ниже по сетке. Это тоже можно будет отменить. Продолжить?`,
+      `Сбросит ещё ${n} ${plural(n, 'сыгранный матч', 'сыгранных матча', 'сыгранных матчей')} ниже по сетке. Это тоже можно будет отменить. Продолжить?`,
     undoBtn: 'Отменить',
     redoBtn: 'Вернуть',
     undoTip: (l) => `Отменить: ${l}  (⌘Z)`,

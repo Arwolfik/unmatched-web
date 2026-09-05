@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getMapImage, getMiniImage } from '../data/box-images';
 import { MatchEditor } from './MatchEditor';
+import { Podium } from './Podium';
 import { t } from '../lib/i18n';
 import {
   feedsFrom,
@@ -18,7 +19,7 @@ import {
   upcomingMatches,
 } from '../lib/tournament';
 import type {
-  ActionLabel, FighterRef, MapRef, Placement, TMatch, Tournament,
+  ActionLabel, FighterRef, MapRef, TMatch, Tournament,
 } from '../lib/tournament';
 import type { Lang } from '../types';
 
@@ -42,6 +43,7 @@ interface Props {
   onUndoAction: () => void;
   onRedoAction: () => void;
   onPlayerRename: (idx: number, name: string) => void;
+  onOpenResults: () => void;
   onOpenSets: () => void;
 }
 
@@ -164,7 +166,14 @@ export function TournamentView(props: Props) {
 
       {/* ── Podium ───────────────────────────────────────────────── */}
       {places.first && (
-        <Podium places={places} lang={lang} playerNames={playerNames} />
+        <>
+          <Podium places={places} lang={lang} playerNames={playerNames} />
+          <div className="tm-podium-cta">
+            <button type="button" className="btn-secondary" onClick={props.onOpenResults}>
+              {s.stats.results} →
+            </button>
+          </div>
+        </>
       )}
 
       {/* ── Up next ──────────────────────────────────────────────── */}
@@ -230,53 +239,6 @@ export function TournamentView(props: Props) {
           onClearResult={(id) => { props.onUndo(id); setEditingId(null); }}
         />
       )}
-    </section>
-  );
-}
-
-// ── Podium ───────────────────────────────────────────────────────────────────
-
-const MEDALS = ['', '🥇', '🥈', '🥉'];
-
-function Podium({
-  places, lang, playerNames,
-}: {
-  places: { first: Placement | null; second: Placement | null; third: Placement | null };
-  lang: Lang;
-  playerNames: [string, string];
-}) {
-  const s = t(lang);
-  const slots: [number, Placement | null][] = [
-    [1, places.first], [2, places.second], [3, places.third],
-  ];
-
-  return (
-    <section className="tm-podium" aria-label={s.tour.podiumTitle}>
-      <h2 className="tm-podium-title">{s.tour.podiumTitle}</h2>
-      <ol className="tm-podium-row">
-        {slots.map(([place, p]) => p && (
-          <li key={place} className={`tm-podium-slot place${place}`}>
-            <div className="tm-podium-card">
-              <div className="tm-podium-medal">{MEDALS[place]}</div>
-              <div className="tm-podium-img">
-                {getMiniImage(p.fighter.setId, p.fighter.idx)
-                  ? <img src={getMiniImage(p.fighter.setId, p.fighter.idx)} alt="" loading="lazy" />
-                  : <span className="tm-podium-code">{setCode(p.fighter.setId)}</span>}
-              </div>
-              <div className="tm-podium-name">{fighterName(p.fighter, lang)}</div>
-              <div className="tm-podium-set">{setName(p.fighter.setId, lang)}</div>
-              {p.player !== null && playerNames[p.player] && (
-                <div className={`tm-podium-player p${p.player}`}>
-                  {s.tour.playedBy(playerNames[p.player])}
-                </div>
-              )}
-            </div>
-            <div className="tm-podium-plinth">
-              <span className="tm-podium-place">{s.tour.place(place)}</span>
-            </div>
-          </li>
-        ))}
-      </ol>
     </section>
   );
 }

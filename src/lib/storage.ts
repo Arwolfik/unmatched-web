@@ -1,4 +1,5 @@
 import type { HistoryEntry, Lang, Mode, RollResult, Theme } from '../types';
+import type { ArchivedTournament } from './stats';
 import type { Tournament, TourSnapshot } from './tournament';
 
 const KEY = 'unmatched-picker:v1';
@@ -17,8 +18,12 @@ interface Persisted {
   tournament?: Tournament | null;
   tournamentPast?: TourSnapshot[];
   tournamentFuture?: TourSnapshot[];
-  view?: 'roll' | 'tournament';
+  /** Tournaments that have been filed away, newest last. */
+  archive?: ArchivedTournament[];
+  view?: View;
 }
+
+export type View = 'roll' | 'tournament' | 'stats' | 'archive';
 
 export function loadState(): Persisted {
   try {

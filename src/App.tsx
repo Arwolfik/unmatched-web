@@ -6,6 +6,9 @@ import { StickyBar } from './components/StickyBar';
 import { HistorySheet } from './components/HistorySheet';
 import { DisclaimerBanner } from './components/DisclaimerBanner';
 import { TournamentView } from './components/TournamentView';
+import { StatsView } from './components/StatsView';
+import { ArchiveView } from './components/ArchiveView';
+import { ResultsSheet } from './components/ResultsSheet';
 import { SETS } from './data/sets';
 import {
   buildFighterPool,
@@ -16,6 +19,7 @@ import {
   ensureFirstSide,
   ensureThirdPlace,
   getMatch,
+  playedCount,
   resolveSlot,
   setMatchFirst,
   setMatchMap,
@@ -36,6 +40,10 @@ import { ALL_SET_IDS, rerollAll, rerollFighter, rerollMap, roll } from './lib/ro
 import type { RollError } from './lib/roll';
 import { t } from './lib/i18n';
 import { HISTORY_MAX, loadState, saveState } from './lib/storage';
+import type { View } from './lib/storage';
+import { computeStats } from './lib/stats';
+import type { ArchivedTournament } from './lib/stats';
+import { buildBackup, downloadBackup, parseBackup } from './lib/backup';
 import { makeId } from './lib/time';
 import { decodeRoll } from './lib/share';
 import type { HistoryEntry, Lang, Mode, RollResult, Theme } from './types';
@@ -75,7 +83,7 @@ export default function App() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [setsOpen, setSetsOpen] = useState(false);
   const [error, setError] = useState<RollError | null>(null);
-  const [view, setView] = useState<'roll' | 'tournament'>(persisted.view ?? 'roll');
+  const [view, setView] = useState<View>(persisted.view ?? 'roll');
   // present/past/future live in one object so an action and its undo entry can
   // never drift apart — two clicks in the same tick would otherwise both read a
   // stale `tournament` and silently drop one of the results.
@@ -93,6 +101,15 @@ export default function App() {
   const tourPast = tourHist.past;
   const tourFuture = tourHist.future;
   const [tourError, setTourError] = useState<string | null>(null);
+  const [archive, setArchive] = useState<ArchivedTournament[]>(() =>
+    (persisted.archive ?? []).map((e) => ({
+      ...e,
+      tournament: ensureFirstSide(ensureThirdPlace(e.tournament)),
+    })),
+  );
+  // 'current' shows the live bracket; a number indexes the archive.
+  const [resultsFor, setResultsFor] = useState<number | 'current' | null>(null);
+  const [importNotice, setImportNotice] = useState<string | null>(null);
 
   // Persist anything that changes
   useEffect(() => { saveState({ lang }); }, [lang]);
@@ -111,6 +128,7 @@ export default function App() {
       tournamentFuture: tourHist.future,
     });
   }, [tourHist]);
+  useEffect(() => { saveState({ archive }); }, [archive]);
   useEffect(() => { saveState({ view }); }, [view]);
 
   // Archive a roll into history (used before replacing current with a fresh roll).
@@ -212,6 +230,28 @@ export default function App() {
 
   const s = t(lang);
   const errorMessage = useMemo(() => formatError(error, lang), [error, lang]);
+
+  const namePair: [string, string] = [
+    playerNames[0] || s.playerN(1),
+    playerNames[1] || s.playerN(2),
+  ];
+  // The live bracket counts straight away. If it has already been filed, the
+  // archived snapshot is the stale one, so the live copy wins.
+  const stats = useMemo(() => computeStats([
+    ...archive.filter((e) => e.tournament.id !== tournament?.id).map((e) => e.tournament),
+    ...(tournament ? [tournament] : []),
+  ]), [archive, tournament]);
+
+  const shown = resultsFor === null ? null
+    : resultsFor === 'current'
+      ? (tournament ? { tournament, names: namePair, date: tournament.createdAt } : null)
+      : (archive[resultsFor]
+        ? {
+          tournament: archive[resultsFor].tournament,
+          names: archive[resultsFor].playerNames,
+          date: archive[resultsFor].archivedAt,
+        }
+        : null);
 
   const handleToggleSet = (id: string) => {
     setSelected((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
@@ -348,10 +388,70 @@ export default function App() {
     }
   };
 
+  /** File the live bracket, replacing any earlier snapshot of the same draw. */
+  const fileAway = (t: Tournament) => {
+    setArchive((cur) => {
+      const entry: ArchivedTournament = {
+        tournament: t,
+        playerNames: [playerNames[0] || s.playerN(1), playerNames[1] || s.playerN(2)],
+        archivedAt: Date.now(),
+      };
+      const at = cur.findIndex((e) => e.tournament.id === t.id);
+      if (at === -1) return [...cur, entry];
+      const next = cur.slice();
+      next[at] = entry;
+      return next;
+    });
+  };
+
   const handleTourRestart = () => {
     if (tournament && !window.confirm(s.tour.restartConfirm)) return;
+    if (tournament && playedCount(tournament) > 0) fileAway(tournament);
     applyTournament(null, { kind: 'reset' });
     setTourError(null);
+  };
+
+  const handleFileCurrent = () => {
+    if (!tournament || !window.confirm(s.stats.archiveFileConfirm)) return;
+    fileAway(tournament);
+    applyTournament(null, { kind: 'reset' });
+  };
+
+  const handleDeleteArchived = (index: number) => {
+    if (!window.confirm(s.stats.archiveDeleteConfirm)) return;
+    setArchive((cur) => cur.filter((_, i) => i !== index));
+  };
+
+  const handleExport = () => {
+    downloadBackup(buildBackup({
+      playerNames, selectedSets: selected, excludedFighters, excludedMaps,
+      tournament, archive,
+    }));
+  };
+
+  const handleImport = async (file: File) => {
+    setImportNotice(null);
+    const parsed = parseBackup(await file.text());
+    if (!parsed.ok) {
+      setImportNotice(
+        parsed.error === 'foreign' ? s.stats.importErrForeign
+          : parsed.error === 'version' ? s.stats.importErrVersion
+            : s.stats.importErrUnreadable,
+      );
+      return;
+    }
+    const b = parsed.backup;
+    const count = b.archive.length + (b.tournament ? 1 : 0);
+    if (!window.confirm(s.stats.importConfirm(count))) return;
+
+    const migrate = (x: Tournament) => ensureFirstSide(ensureThirdPlace(x));
+    setArchive(b.archive.map((e) => ({ ...e, tournament: migrate(e.tournament) })));
+    setTourHist({ present: b.tournament ? migrate(b.tournament) : null, past: [], future: [] });
+    if (b.playerNames.length) setPlayerNames(b.playerNames);
+    if (b.selectedSets.length) setSelected(b.selectedSets);
+    setExcludedFighters(b.excludedFighters);
+    setExcludedMaps(b.excludedMaps);
+    setImportNotice(s.stats.importDone(count));
   };
 
   const handleTourWin = (matchId: string, winner: 'a' | 'b') => {
@@ -453,6 +553,24 @@ export default function App() {
           >
             🏆 {s.tour.nav}
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'stats'}
+            className="view-tab"
+            onClick={() => setView('stats')}
+          >
+            📊 {s.stats.nav}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === 'archive'}
+            className="view-tab"
+            onClick={() => setView('archive')}
+          >
+            🗄 {s.stats.navArchive}
+          </button>
         </div>
       </div>
 
@@ -465,15 +583,35 @@ export default function App() {
         />
       )}
 
-      {view === 'tournament' ? (
+      {view === 'stats' ? (
+        <main>
+          <StatsView
+            lang={lang}
+            stats={stats}
+            playerNames={namePair}
+            importNotice={importNotice}
+            onExport={handleExport}
+            onImport={handleImport}
+          />
+        </main>
+      ) : view === 'archive' ? (
+        <main>
+          <ArchiveView
+            lang={lang}
+            archive={archive}
+            current={tournament}
+            currentNames={namePair}
+            onOpenResults={setResultsFor}
+            onFileCurrent={handleFileCurrent}
+            onDelete={handleDeleteArchived}
+          />
+        </main>
+      ) : view === 'tournament' ? (
         <main>
           <TournamentView
             lang={lang}
             tournament={tournament}
-            playerNames={[
-              playerNames[0] || s.playerN(1),
-              playerNames[1] || s.playerN(2),
-            ]}
+            playerNames={namePair}
             poolSize={buildFighterPool(selected, excludedFighters).length}
             poolSets={selected.length}
             poolMaps={buildMapPool(selected, excludedMaps).length}
@@ -490,6 +628,7 @@ export default function App() {
             onUndoAction={handleTourUndoAction}
             onRedoAction={handleTourRedoAction}
             onPlayerRename={handlePlayerRename}
+            onOpenResults={() => setResultsFor('current')}
             onOpenSets={() => setSetsOpen(true)}
           />
         </main>
@@ -534,6 +673,16 @@ export default function App() {
           )
         )}
       </main>
+      )}
+
+      {shown && (
+        <ResultsSheet
+          lang={lang}
+          tournament={shown.tournament}
+          playerNames={shown.names}
+          date={shown.date}
+          onClose={() => setResultsFor(null)}
+        />
       )}
 
       <footer className="footer">
