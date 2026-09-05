@@ -13,12 +13,16 @@ import {
   clearWinner,
   createTournament,
   dependentDecidedCount,
+  ensureFirstSide,
   ensureThirdPlace,
   getMatch,
   resolveSlot,
+  setMatchFirst,
+  setMatchMap,
   setWinner,
+  swapMatchSides,
 } from './lib/tournament';
-import type { ActionLabel, Tournament, TourSnapshot } from './lib/tournament';
+import type { ActionLabel, MapRef, Tournament, TourSnapshot } from './lib/tournament';
 
 /** How many tournament actions can be walked back. */
 const UNDO_LIMIT = 30;
@@ -78,7 +82,7 @@ export default function App() {
   // Tournaments drawn before the third-place match existed get it added on
   // load — including every undo snapshot, so stepping back doesn't lose it.
   const [tourHist, setTourHist] = useState<TourHistory>(() => {
-    const migrate = (x: Tournament | null) => (x ? ensureThirdPlace(x) : x);
+    const migrate = (x: Tournament | null) => (x ? ensureFirstSide(ensureThirdPlace(x)) : x);
     return {
       present: migrate(persisted.tournament ?? null),
       past: (persisted.tournamentPast ?? []).map((s) => ({ ...s, state: migrate(s.state) })),
@@ -372,6 +376,16 @@ export default function App() {
     );
   };
 
+  // In-the-moment tweaks. None of them touch who faces whom.
+  const handleSetMap = (matchId: string, map: MapRef) =>
+    applyTournament((cur) => (cur ? setMatchMap(cur, matchId, map) : cur), { kind: 'editMap' });
+
+  const handleSwapSides = (matchId: string) =>
+    applyTournament((cur) => (cur ? swapMatchSides(cur, matchId) : cur), { kind: 'editSides' });
+
+  const handleSetFirst = (matchId: string, side: 'a' | 'b') =>
+    applyTournament((cur) => (cur ? setMatchFirst(cur, matchId, side) : cur), { kind: 'editFirst' });
+
   const handlePlayerRename = (idx: number, name: string) => {
     setPlayerNames((cur) => {
       const next = cur.length === 4 ? cur.slice() : ['', '', '', ''];
@@ -470,6 +484,9 @@ export default function App() {
             onRestart={handleTourRestart}
             onWin={handleTourWin}
             onUndo={handleTourUndo}
+            onSetMap={handleSetMap}
+            onSwapSides={handleSwapSides}
+            onSetFirst={handleSetFirst}
             onUndoAction={handleTourUndoAction}
             onRedoAction={handleTourRedoAction}
             onPlayerRename={handlePlayerRename}

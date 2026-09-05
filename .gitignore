@@ -6,3 +6,6 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .env
+
+# Browser smoke-test fixture written by scripts/seed-done.ts
+public/__seed.json

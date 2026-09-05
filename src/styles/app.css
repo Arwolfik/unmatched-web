@@ -1425,6 +1425,139 @@ main {
 }
 .tm-card-round { color: var(--accent); font-weight: 600; }
 .tm-card-num { color: var(--text-3); }
+.tm-card-edit {
+  font: inherit; color: var(--text-3);
+  background: none; border: none; padding: 0; cursor: pointer;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  transition: color var(--t-fast) var(--ease);
+}
+.tm-card-edit:hover { color: var(--accent); }
+
+/* First turn */
+.tm-side.first { background: var(--surface-3); }
+.tm-side-first {
+  font-family: var(--font-mono);
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 2px 5px; margin-left: 8px;
+  vertical-align: middle; white-space: nowrap;
+}
+.tm-tree-first {
+  font-family: var(--font-mono);
+  font-size: 8px; font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 0 3px; margin-left: auto; flex-shrink: 0;
+}
+
+/* Match editor */
+.me-round {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); margin-left: 10px;
+}
+.me-note {
+  font-size: 12px; color: var(--text-2);
+  margin: 0 0 20px; line-height: 1.5;
+}
+.me-block { margin-bottom: 24px; }
+.me-block-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin-bottom: 10px;
+}
+.me-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 10px;
+}
+.me-block-head .me-label { margin-bottom: 0; }
+.me-swap { flex-shrink: 0; }
+
+.me-row {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+}
+.me-row + .me-row { border-top: none; }
+.me-row.won { border-color: var(--accent); background: var(--accent-tint); }
+.me-row.won + .me-row { border-top: none; }
+.me-row-img {
+  width: 48px; height: 48px; flex-shrink: 0;
+  background: #fff; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; padding: 3px;
+}
+.me-row-img img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.me-code { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); }
+.me-row-body { flex: 1; min-width: 0; }
+.me-row-player {
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.me-row-player.p0 { color: var(--accent); }
+.me-row-player.p1 { color: var(--player-b); }
+.me-row-name {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 600; color: var(--text);
+  line-height: 1.2; margin-top: 2px;
+}
+.me-row-set {
+  font-family: var(--font-display); font-style: italic;
+  font-size: 12px; color: var(--text-2);
+}
+.me-first {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3);
+  background: none;
+  border: 1px solid var(--border-strong);
+  padding: 7px 9px; cursor: pointer;
+  transition: all var(--t-fast) var(--ease);
+}
+.me-first:hover { border-color: var(--accent); color: var(--accent); }
+.me-first.on {
+  background: var(--accent); border-color: var(--accent); color: var(--on-accent);
+}
+.me-hint {
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text-3);
+  margin-top: 8px; text-align: right;
+}
+
+.me-map-current {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--border); padding: 10px 12px; margin-bottom: 10px;
+}
+.me-map-thumb {
+  width: 72px; height: 48px; flex-shrink: 0;
+  background: #fff; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+.me-map-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.me-map-current b {
+  display: block;
+  font-family: var(--font-display); font-size: 15px; color: var(--text);
+}
+.me-map-current em {
+  font-family: var(--font-display); font-size: 12px; color: var(--text-2);
+}
+.me-select {
+  width: 100%; font: inherit; font-size: 13px;
+  color: var(--text); background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-btn);
+  padding: 9px 10px;
+}
+.me-result { font-size: 13px; color: var(--text); margin: 0 0 12px; }
 
 .tm-side {
   display: flex; align-items: center; gap: 12px;

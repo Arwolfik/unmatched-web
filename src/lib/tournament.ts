@@ -37,6 +37,8 @@ export interface TMatch {
   map: MapRef | null;
   /** Which player (0 or 1) plays fighter A. Null until the match is ready. */
   sideA: 0 | 1 | null;
+  /** Which fighter takes the first turn. Null until the match is ready. */
+  firstSide: 'a' | 'b' | null;
   winner: 'a' | 'b' | null;
   playedAt: number | null;
   /** The bronze match. Lives in the final's column but outside the main tree. */
@@ -62,7 +64,10 @@ export type ActionLabel =
   | { kind: 'win'; fighter: FighterRef }
   | { kind: 'undoMatch' }
   | { kind: 'draw' }
-  | { kind: 'reset' };
+  | { kind: 'reset' }
+  | { kind: 'editMap' }
+  | { kind: 'editSides' }
+  | { kind: 'editFirst' };
 
 export interface TourSnapshot {
   state: Tournament | null;
@@ -219,7 +224,7 @@ export function createTournament(
       idx: k,
       a: { kind: 'fighter', ref: qualifiers[2 * k] },
       b: { kind: 'fighter', ref: qualifiers[2 * k + 1] },
-      map: null, sideA: null, winner: null, playedAt: null,
+      map: null, sideA: null, firstSide: null, winner: null, playedAt: null,
     });
   }
 
@@ -238,7 +243,7 @@ export function createTournament(
       idx: i,
       a: slotToRef(2 * i),
       b: slotToRef(2 * i + 1),
-      map: null, sideA: null, winner: null, playedAt: null,
+      map: null, sideA: null, firstSide: null, winner: null, playedAt: null,
     });
   }
 
@@ -253,7 +258,7 @@ export function createTournament(
         idx: i,
         a: { kind: 'winnerOf', matchId: `r${r - 1}m${2 * i}` },
         b: { kind: 'winnerOf', matchId: `r${r - 1}m${2 * i + 1}` },
-        map: null, sideA: null, winner: null, playedAt: null,
+        map: null, sideA: null, firstSide: null, winner: null, playedAt: null,
       });
     }
   }
@@ -325,9 +330,19 @@ function playCounts(t: Tournament, skipId: string): Map<string, number> {
   return counts;
 }
 
-/** Assign a map (from neither fighter's box, least-used first) and sides. */
+/** How many matches each player already opens, keyed by player index. */
+function firstCounts(t: Tournament, skipId: string): [number, number] {
+  const out: [number, number] = [0, 0];
+  for (const o of t.matches) {
+    if (o.id === skipId || o.sideA === null || o.firstSide === null) continue;
+    out[o.firstSide === 'a' ? o.sideA : 1 - o.sideA]++;
+  }
+  return out;
+}
+
+/** Assign a map (from neither fighter's box, least-used first), sides and first turn. */
 function prepareIfReady(t: Tournament, m: TMatch): void {
-  if (m.map && m.sideA !== null) return;
+  if (m.map && m.sideA !== null && m.firstSide !== null) return;
   const a = resolveSlot(t, m.a);
   const b = resolveSlot(t, m.b);
   if (!a || !b) return;
@@ -346,6 +361,20 @@ function prepareIfReady(t: Tournament, m: TMatch): void {
       costP0takesA < costP1takesA ? 0
       : costP1takesA < costP0takesA ? 1
       : Math.random() < 0.5 ? 0 : 1;
+  }
+
+  if (m.firstSide === null) {
+    // Going first is a real edge in Unmatched, so it is shared out evenly
+    // between the two humans rather than always falling to the top of the
+    // bracket. Ties break randomly, which keeps the order unpredictable while
+    // the totals stay level.
+    const opens = firstCounts(t, m.id);
+    const pA = m.sideA as 0 | 1;
+    const pB = (1 - pA) as 0 | 1;
+    m.firstSide =
+      opens[pA] < opens[pB] ? 'a'
+      : opens[pB] < opens[pA] ? 'b'
+      : Math.random() < 0.5 ? 'a' : 'b';
   }
 
   if (!m.map) {
@@ -409,6 +438,7 @@ export function clearWinner(t: Tournament, matchId: string): Tournament {
       if (!feedsFrom(d, id)) continue;
       d.map = null;
       d.sideA = null;
+      d.firstSide = null;
       if (d.winner) reset(d.id);
     }
   };
@@ -510,12 +540,67 @@ export function ensureThirdPlace(t: Tournament): Tournament {
         thirdPlace: true,
         a: { kind: 'loserOf', matchId: semis[0].id },
         b: { kind: 'loserOf', matchId: semis[1].id },
-        map: null, sideA: null, winner: null, playedAt: null,
+        map: null, sideA: null, firstSide: null, winner: null, playedAt: null,
       },
     ],
   };
   // Only the new match can actually change here: prepareIfReady bails out early
   // on anything that already has a map and sides.
+  for (const m of next.matches) prepareIfReady(next, m);
+  return next;
+}
+
+// ── In-the-moment edits ──────────────────────────────────────────────────────
+//
+// The pairing is fixed by the bracket and never editable — these only change
+// how a fixed pairing is played out. Swapping sides on a match that is already
+// decided deliberately moves that win to the other player: the fighters met,
+// but a different human was behind the winning one.
+
+/** Which player takes the first turn, or null until the match is drawn. */
+export function firstPlayer(m: TMatch): 0 | 1 | null {
+  if (m.sideA === null || m.firstSide === null) return null;
+  return (m.firstSide === 'a' ? m.sideA : 1 - m.sideA) as 0 | 1;
+}
+
+export function setMatchMap(t: Tournament, matchId: string, map: MapRef): Tournament {
+  const cur = getMatch(t, matchId);
+  if (!cur || (cur.map?.setId === map.setId && cur.map?.idx === map.idx)) return t;
+  const next = clone(t);
+  getMatch(next, matchId)!.map = { ...map };
+  return next;
+}
+
+/** Hand each fighter to the other player. */
+export function swapMatchSides(t: Tournament, matchId: string): Tournament {
+  const cur = getMatch(t, matchId);
+  if (!cur || cur.sideA === null) return t;
+  const next = clone(t);
+  const m = getMatch(next, matchId)!;
+  m.sideA = (1 - m.sideA!) as 0 | 1;
+  return next;
+}
+
+export function setMatchFirst(t: Tournament, matchId: string, side: 'a' | 'b'): Tournament {
+  const cur = getMatch(t, matchId);
+  if (!cur || cur.firstSide === side) return t;
+  const next = clone(t);
+  getMatch(next, matchId)!.firstSide = side;
+  return next;
+}
+
+/**
+ * Backfills the first turn for tournaments drawn before it was tracked. Matches
+ * that were already played get 'a', because that is what the old rule did — the
+ * top of the bracket always opened — so the record stays true to the table.
+ * Everything still unplayed is drawn fresh by the balanced rule.
+ */
+export function ensureFirstSide(t: Tournament): Tournament {
+  if (t.matches.every((m) => m.firstSide !== null || m.sideA === null)) return t;
+  const next = clone(t);
+  for (const m of next.matches) {
+    if (m.firstSide === null && m.winner !== null) m.firstSide = 'a';
+  }
   for (const m of next.matches) prepareIfReady(next, m);
   return next;
 }

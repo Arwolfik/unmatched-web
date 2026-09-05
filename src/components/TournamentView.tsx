@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getMapImage, getMiniImage } from '../data/box-images';
+import { MatchEditor } from './MatchEditor';
 import { t } from '../lib/i18n';
 import {
   feedsFrom,
@@ -17,7 +18,7 @@ import {
   upcomingMatches,
 } from '../lib/tournament';
 import type {
-  ActionLabel, FighterRef, Placement, TMatch, Tournament,
+  ActionLabel, FighterRef, MapRef, Placement, TMatch, Tournament,
 } from '../lib/tournament';
 import type { Lang } from '../types';
 
@@ -35,6 +36,9 @@ interface Props {
   onRestart: () => void;
   onWin: (matchId: string, winner: 'a' | 'b') => void;
   onUndo: (matchId: string) => void;
+  onSetMap: (matchId: string, map: MapRef) => void;
+  onSwapSides: (matchId: string) => void;
+  onSetFirst: (matchId: string, side: 'a' | 'b') => void;
   onUndoAction: () => void;
   onRedoAction: () => void;
   onPlayerRename: (idx: number, name: string) => void;
@@ -51,6 +55,9 @@ function actionText(a: ActionLabel, lang: Lang): string {
     case 'undoMatch': return s.tour.actUndoMatch;
     case 'draw': return s.tour.actDraw;
     case 'reset': return s.tour.actReset;
+    case 'editMap': return s.tour.actEditMap;
+    case 'editSides': return s.tour.actEditSides;
+    case 'editFirst': return s.tour.actEditFirst;
   }
 }
 
@@ -87,6 +94,7 @@ export function TournamentView(props: Props) {
   const { lang, tournament, playerNames } = props;
   const s = t(lang);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   if (!tournament) {
     return (
@@ -100,6 +108,7 @@ export function TournamentView(props: Props) {
   const played = playedCount(tournament);
   const total = tournament.matches.length;
   const scores = playerScores(tournament);
+  const editing = editingId ? tournament.matches.find((m) => m.id === editingId) : undefined;
   const places = podium(tournament);
   const upcoming = upcomingMatches(tournament);
   const visible = showAllUpcoming ? upcoming : upcoming.slice(0, UPCOMING_PREVIEW);
@@ -175,6 +184,7 @@ export function TournamentView(props: Props) {
                   playerNames={playerNames}
                   roundLabel={matchLabel(m)}
                   onWin={props.onWin}
+                  onEdit={setEditingId}
                 />
               ))}
             </div>
@@ -201,9 +211,25 @@ export function TournamentView(props: Props) {
           lang={lang}
           playerNames={playerNames}
           label={roundLabel}
-          onUndo={props.onUndo}
+          onEdit={setEditingId}
         />
       </div>
+
+      {editing && (
+        <MatchEditor
+          open
+          lang={lang}
+          tournament={tournament}
+          match={editing}
+          playerNames={playerNames}
+          roundLabel={matchLabel(editing)}
+          onClose={() => setEditingId(null)}
+          onSetMap={props.onSetMap}
+          onSwapSides={props.onSwapSides}
+          onSetFirst={props.onSetFirst}
+          onClearResult={(id) => { props.onUndo(id); setEditingId(null); }}
+        />
+      )}
     </section>
   );
 }
@@ -265,13 +291,13 @@ const HEADER_H = 32;
 const THIRD_GAP = 40;   // room for the "third place" caption under the tree
 
 function BracketTree({
-  t: tour, lang, playerNames, label, onUndo,
+  t: tour, lang, playerNames, label, onEdit,
 }: {
   t: Tournament;
   lang: Lang;
   playerNames: [string, string];
   label: (round: number) => string;
-  onUndo: (id: string) => void;
+  onEdit: (id: string) => void;
 }) {
   const s = t(lang);
 
@@ -379,8 +405,9 @@ function BracketTree({
             x={colX(m.round)}
             y={y[m.id] + HEADER_H}
             third={Boolean(m.thirdPlace)}
-            onUndo={onUndo}
-            undoLabel={s.tour.undo}
+            onEdit={onEdit}
+            editLabel={s.tour.edit}
+            firstLabel={s.tour.goesFirstShort}
             tbd={s.tour.tbd}
           />
         ))}
@@ -390,7 +417,7 @@ function BracketTree({
 }
 
 function TreeBox({
-  m, t: tour, lang, playerNames, x, y, third, onUndo, undoLabel, tbd,
+  m, t: tour, lang, playerNames, x, y, third, onEdit, editLabel, firstLabel, tbd,
 }: {
   m: TMatch;
   t: Tournament;
@@ -399,20 +426,22 @@ function TreeBox({
   x: number;
   y: number;
   third: boolean;
-  onUndo: (id: string) => void;
-  undoLabel: string;
+  onEdit: (id: string) => void;
+  editLabel: string;
+  firstLabel: string;
   tbd: string;
 }) {
   const a = resolveSlot(tour, m.a);
   const b = resolveSlot(tour, m.b);
   const sides = sidesOf(m);
   const decided = m.winner !== null;
+  const drawn = Boolean(a && b && sides);
 
   const tip = [
     m.map ? `🗺 ${mapName(m.map, lang)}` : null,
     sides && a ? `${playerNames[sides.playerA]}: ${fighterName(a, lang)}` : null,
     sides && b ? `${playerNames[sides.playerB]}: ${fighterName(b, lang)}` : null,
-    decided ? undoLabel : null,
+    drawn ? editLabel : null,
   ].filter(Boolean).join('\n');
 
   const row = (ref_: FighterRef | null, side: 'a' | 'b') => {
@@ -428,6 +457,7 @@ function TreeBox({
           </span>
         )}
         <span className="tm-tree-name">{ref_ ? fighterName(ref_, lang) : tbd}</span>
+        {m.firstSide === side && <span className="tm-tree-first">{firstLabel}</span>}
       </span>
     );
   };
@@ -438,9 +468,9 @@ function TreeBox({
     title: tip || undefined,
   };
 
-  if (decided) {
+  if (drawn) {
     return (
-      <button type="button" {...common} onClick={() => onUndo(m.id)} aria-label={undoLabel}>
+      <button type="button" {...common} onClick={() => onEdit(m.id)} aria-label={editLabel}>
         {row(a, 'a')}
         {row(b, 'b')}
       </button>
@@ -487,7 +517,7 @@ function TournamentSetup({
 // ── Match card (playable) ────────────────────────────────────────────────────
 
 function MatchCard({
-  m, t: tour, lang, playerNames, roundLabel, onWin,
+  m, t: tour, lang, playerNames, roundLabel, onWin, onEdit,
 }: {
   m: TMatch;
   t: Tournament;
@@ -495,6 +525,7 @@ function MatchCard({
   playerNames: [string, string];
   roundLabel: string;
   onWin: (id: string, w: 'a' | 'b') => void;
+  onEdit: (id: string) => void;
 }) {
   const s = t(lang);
   const a = resolveSlot(tour, m.a)!;
@@ -505,19 +536,23 @@ function MatchCard({
     <article className="tm-card">
       <header className="tm-card-head">
         <span className="tm-card-round">{roundLabel}</span>
-        <span className="tm-card-num">#{m.idx + 1}</span>
+        <button type="button" className="tm-card-edit" onClick={() => onEdit(m.id)}>
+          ✎ {s.tour.edit}
+        </button>
       </header>
 
       <FighterSide
         ref_={a} lang={lang}
         player={sides ? playerNames[sides.playerA] : ''}
         playerIdx={sides ? sides.playerA : null}
+        first={m.firstSide === 'a'}
       />
       <div className="tm-card-vs"><span>{s.tour.vs}</span></div>
       <FighterSide
         ref_={b} lang={lang}
         player={sides ? playerNames[sides.playerB] : ''}
         playerIdx={sides ? sides.playerB : null}
+        first={m.firstSide === 'b'}
       />
 
       {m.map && (
@@ -547,12 +582,14 @@ function MatchCard({
 }
 
 function FighterSide({
-  ref_, lang, player, playerIdx,
-}: { ref_: FighterRef; lang: Lang; player: string; playerIdx: 0 | 1 | null }) {
+  ref_, lang, player, playerIdx, first,
+}: {
+  ref_: FighterRef; lang: Lang; player: string; playerIdx: 0 | 1 | null; first: boolean;
+}) {
   const s = t(lang);
   const img = getMiniImage(ref_.setId, ref_.idx);
   return (
-    <div className="tm-side">
+    <div className={`tm-side${first ? ' first' : ''}`}>
       <div className="tm-side-img">
         {img ? <img src={img} alt="" loading="lazy" /> : <span className="tm-side-code">{setCode(ref_.setId)}</span>}
       </div>
@@ -562,7 +599,10 @@ function FighterSide({
             <b>{player}</b> <span>{s.tour.plays}</span>
           </div>
         )}
-        <div className="tm-side-name">{fighterName(ref_, lang)}</div>
+        <div className="tm-side-name">
+          {fighterName(ref_, lang)}
+          {first && <span className="tm-side-first">{s.tour.goesFirst}</span>}
+        </div>
         <div className="tm-side-set">
           <span className="tm-side-set-code">{setCode(ref_.setId)}</span>
           {setName(ref_.setId, lang)}

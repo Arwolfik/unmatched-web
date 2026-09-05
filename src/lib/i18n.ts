@@ -68,6 +68,9 @@ interface Strings {
     actUndoMatch: string;
     actDraw: string;
     actReset: string;
+    actEditMap: string;
+    actEditSides: string;
+    actEditFirst: string;
     safetyNote: string;
     progress: (played: number, total: number) => string;
     upcoming: string;
@@ -86,6 +89,20 @@ interface Strings {
     vs: string;
     tbd: string;
     scoreboard: string;
+    goesFirst: string;
+    goesFirstShort: string;
+    edit: string;
+    editTitle: string;
+    editPairFixed: string;
+    editMapLabel: string;
+    editSidesLabel: string;
+    editFirstLabel: string;
+    editSwap: string;
+    editOwnBox: string;
+    editResult: string;
+    editClearResult: string;
+    editWonNote: (fighter: string, player: string) => string;
+    editClose: string;
     errNoFighters: string;
     errNoMaps: string;
     matchN: (round: string, n: number) => string;
@@ -182,6 +199,9 @@ const en: Strings = {
     actUndoMatch: 'cleared a result',
     actDraw: 'new draw',
     actReset: 'tournament reset',
+    actEditMap: 'map changed',
+    actEditSides: 'sides swapped',
+    actEditFirst: 'first turn changed',
     safetyNote: 'Every action can be undone — nothing is lost by a stray tap.',
     progress: (p, t) => `${p} of ${t} matches played`,
     upcoming: 'Up next',
@@ -200,6 +220,20 @@ const en: Strings = {
     vs: 'vs',
     tbd: 'TBD',
     scoreboard: 'Head to head',
+    goesFirst: 'Goes first',
+    goesFirstShort: '1st',
+    edit: 'Edit',
+    editTitle: 'Match settings',
+    editPairFixed: 'The bracket fixes who meets whom. Everything else is yours to change.',
+    editMapLabel: 'Map',
+    editSidesLabel: 'Who plays whom',
+    editFirstLabel: 'Who goes first',
+    editSwap: 'Swap fighters',
+    editOwnBox: "one of the fighters' own box",
+    editResult: 'Result',
+    editClearResult: 'Clear result',
+    editWonNote: (fighter, player) => `${fighter} won — the point goes to ${player}.`,
+    editClose: 'Done',
     errNoFighters: 'Need at least 4 fighters — pick more sets first.',
     errNoMaps: 'No maps in the selected sets — a tournament needs at least one.',
     matchN: (round, n) => `${round} · match ${n}`,
@@ -306,6 +340,9 @@ const ru: Strings = {
     actUndoMatch: 'сброс результата',
     actDraw: 'новая жеребьёвка',
     actReset: 'сброс турнира',
+    actEditMap: 'смена карты',
+    actEditSides: 'обмен персонажами',
+    actEditFirst: 'смена первого хода',
     safetyNote: 'Любое действие можно отменить — случайный тык ничего не сломает.',
     progress: (p, t) => `Сыграно ${p} из ${t} матчей`,
     upcoming: 'Ближайшие матчи',
@@ -324,6 +361,20 @@ const ru: Strings = {
     vs: 'против',
     tbd: 'Ждём',
     scoreboard: 'Личный счёт',
+    goesFirst: 'Ходит первым',
+    goesFirstShort: '1-й',
+    edit: 'Изменить',
+    editTitle: 'Условия матча',
+    editPairFixed: 'Кто с кем играет — задаёт сетка. Всё остальное можно менять.',
+    editMapLabel: 'Карта',
+    editSidesLabel: 'Кто за кого',
+    editFirstLabel: 'Кто ходит первым',
+    editSwap: 'Поменяться персонажами',
+    editOwnBox: 'родная коробка одного из бойцов',
+    editResult: 'Результат',
+    editClearResult: 'Сбросить результат',
+    editWonNote: (fighter, player) => `Победа: ${fighter}. Очко: ${player}.`,
+    editClose: 'Готово',
     errNoFighters: 'Нужно минимум 4 бойца — отметь больше наборов.',
     errNoMaps: 'В выбранных наборах нет карт — для турнира нужна хотя бы одна.',
     matchN: (round, n) => `${round} · матч ${n}`,
