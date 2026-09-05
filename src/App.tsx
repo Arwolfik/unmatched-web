@@ -16,8 +16,7 @@ import {
   clearWinner,
   createTournament,
   dependentDecidedCount,
-  ensureFirstSide,
-  ensureThirdPlace,
+  migrateTournament,
   getMatch,
   playedCount,
   resolveSlot,
@@ -90,7 +89,7 @@ export default function App() {
   // Tournaments drawn before the third-place match existed get it added on
   // load — including every undo snapshot, so stepping back doesn't lose it.
   const [tourHist, setTourHist] = useState<TourHistory>(() => {
-    const migrate = (x: Tournament | null) => (x ? ensureFirstSide(ensureThirdPlace(x)) : x);
+    const migrate = (x: Tournament | null) => (x ? migrateTournament(x) : x);
     return {
       present: migrate(persisted.tournament ?? null),
       past: (persisted.tournamentPast ?? []).map((s) => ({ ...s, state: migrate(s.state) })),
@@ -104,7 +103,7 @@ export default function App() {
   const [archive, setArchive] = useState<ArchivedTournament[]>(() =>
     (persisted.archive ?? []).map((e) => ({
       ...e,
-      tournament: ensureFirstSide(ensureThirdPlace(e.tournament)),
+      tournament: migrateTournament(e.tournament),
     })),
   );
   // 'current' shows the live bracket; a number indexes the archive.
@@ -444,7 +443,7 @@ export default function App() {
     const count = b.archive.length + (b.tournament ? 1 : 0);
     if (!window.confirm(s.stats.importConfirm(count))) return;
 
-    const migrate = (x: Tournament) => ensureFirstSide(ensureThirdPlace(x));
+    const migrate = migrateTournament;
     setArchive(b.archive.map((e) => ({ ...e, tournament: migrate(e.tournament) })));
     setTourHist({ present: b.tournament ? migrate(b.tournament) : null, past: [], future: [] });
     if (b.playerNames.length) setPlayerNames(b.playerNames);

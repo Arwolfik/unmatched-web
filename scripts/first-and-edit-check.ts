@@ -1,7 +1,7 @@
 /* First-turn fairness, and that in-the-moment edits only change what they should. */
 import {
   createTournament, setWinner, upcomingMatches, playedCount, resolveSlot,
-  ensureFirstSide, firstPlayer, playerScores, getMatch,
+  ensureFirstSide, migrateTournament, firstPlayer, playerScores, getMatch,
   setMatchMap, swapMatchSides, setMatchFirst,
 } from '../src/lib/tournament';
 import type { TMatch, Tournament } from '../src/lib/tournament';
@@ -75,6 +75,37 @@ for (let run = 0; run < 100; run++) {
   if (ensureFirstSide(after) !== after) throw new Error('not idempotent');
 }
 console.log('✓ backfill: played matches keep top-opens, nothing else moves, idempotent');
+
+// ── 2b. The same, through the migration App actually runs on load ───────────
+// Adding the bronze match re-prepares the whole bracket, so it has to happen
+// after the first turns are recorded, not before.
+for (let run = 0; run < 100; run++) {
+  const base = playOut(fresh(), 1 + Math.floor(Math.random() * 33));
+  // How a tournament drawn before either feature is stored: no bronze match,
+  // and no firstSide key on any match.
+  const legacy: Tournament = {
+    ...base,
+    matches: base.matches.filter((m) => !m.thirdPlace).map((m) => {
+      const { firstSide: _drop, ...rest } = m;
+      return rest as typeof m;
+    }),
+  };
+  const before = new Map(legacy.matches.map((m) => [m.id, JSON.stringify(m)]));
+  const after = migrateTournament(legacy);
+
+  if (after.matches.filter((m) => m.thirdPlace).length !== 1) throw new Error('bronze match missing');
+  for (const m of after.matches) {
+    if (m.thirdPlace) continue;
+    const was = JSON.parse(before.get(m.id)!) as TMatch;
+    const { firstSide, ...rest } = m;
+    if (JSON.stringify(rest) !== JSON.stringify(was)) throw new Error(`${m.id} changed beyond firstSide`);
+    if (was.winner !== null && firstSide !== 'a') throw new Error(`played ${m.id} lost its top-opens record`);
+    if (was.sideA !== null && firstSide == null) throw new Error(`${m.id} left without a first turn`);
+  }
+  if (playerScores(after).join(':') !== playerScores(legacy).join(':')) throw new Error('score drifted');
+  if (migrateTournament(after) !== after) throw new Error('migration not idempotent');
+}
+console.log('✓ full migration: bronze added, first turns backfilled, played matches untouched');
 
 // ── 3. Edits change only what they claim to ─────────────────────────────────
 for (let run = 0; run < 100; run++) {

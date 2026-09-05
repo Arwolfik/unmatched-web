@@ -610,6 +610,16 @@ export function ensureFirstSide(t: Tournament): Tournament {
   return next;
 }
 
+/**
+ * Bring a stored tournament up to date. Order matters: ensureFirstSide has to
+ * record history before ensureThirdPlace runs, because adding the bronze match
+ * re-runs prepareIfReady over the whole bracket and would otherwise draw a
+ * fresh first turn for matches that were already played.
+ */
+export function migrateTournament(t: Tournament): Tournament {
+  return ensureThirdPlace(ensureFirstSide(t));
+}
+
 /** Match wins per human player. */
 export function playerScores(t: Tournament): [number, number] {
   const score: [number, number] = [0, 0];
